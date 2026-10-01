@@ -2,7 +2,10 @@
 
 Free, browser-based FBX viewer and animation tool. Everything runs locally in your browser: files are never uploaded.
 
+**Live demo:** https://bvnkame.github.io/fbx-viewer/
 **Live demo:** https://YOUR-USERNAME.github.io/fbx-viewer/
+
+
 
 ## Features
 
