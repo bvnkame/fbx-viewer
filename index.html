@@ -72,6 +72,46 @@ select.b{max-width:200px}
 .blg select.b,.blg input.b{max-width:none;width:100%}
 .blb{display:flex;gap:6px;margin-top:8px}
 .blb .b{flex:1}
+#be{position:absolute;left:0;right:0;bottom:0;height:min(52%,420px);min-height:240px;display:none;flex-direction:column;background:var(--chrome2);border-top:1px solid var(--ln);z-index:5;font-size:12px}
+#be.show{display:flex}
+.beh{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid var(--ln);flex-wrap:wrap}
+.beh .sp{flex:1}
+#app .beh .b{padding:3px 8px;font-size:12px}
+.bcr{color:var(--muted)}.bcr a{color:var(--acc);cursor:pointer;text-decoration:underline}
+.beb{flex:1;display:flex;min-height:0}
+#bes{flex:1;min-width:0;height:100%;touch-action:none;user-select:none;background-color:var(--chrome);background-image:linear-gradient(var(--ln) 1px,transparent 1px),linear-gradient(90deg,var(--ln) 1px,transparent 1px);background-size:20px 20px}
+#bei{width:210px;overflow:auto;border-left:1px solid var(--ln);padding:8px;display:flex;flex-direction:column;gap:6px}
+#bei .bh{font-weight:600;font-size:12px}
+#bei .bn{color:var(--muted);font-size:11px;line-height:1.4}
+#bei .bf{display:flex;flex-direction:column;gap:2px;color:var(--muted);font-size:11px}
+#bei .b{width:100%;max-width:none;font-size:12px;padding:4px 8px}
+#bei .b.danger{color:#d9534f}
+#bes text{fill:var(--fg);font-size:11px;pointer-events:none}
+#bes .nd{cursor:grab}
+#bes .nd rect{fill:var(--chrome2);stroke:var(--ln);stroke-width:1.5}
+#bes .nd.start rect{fill:#2e8b57;stroke:#2e8b57}#bes .nd.start text{fill:#fff;font-weight:600}
+#bes .nd .nt{font-weight:600}#bes .nd .ns{fill:var(--muted);font-size:10px}
+#bes .nd .nedit{pointer-events:all;cursor:pointer;font-size:14px;fill:var(--acc)}
+#bes .nd.sel rect{stroke:var(--acc);stroke-width:2}
+#bes .nd.on rect{stroke:#e8a33d;stroke-width:2.5}
+#bes .nd .prog{fill:#e8a33d;stroke:none}
+#bes .ed{cursor:pointer}
+#bes .ed .hit{stroke:transparent;stroke-width:12}
+#bes .ed .ln{stroke:var(--muted);stroke-width:1.6}
+#bes .ed.atend .ln{stroke-dasharray:5 4}
+#bes .ed.sel .ln,#bes .ed.sel .ah{stroke:var(--acc);fill:var(--acc)}
+#bes .ed.auto .ln{stroke:#2e8b57}#bes .ed.auto .ah{fill:#2e8b57}
+#bes .ah{fill:var(--muted)}
+#bes .el{fill:var(--muted);font-size:10px}
+#bes .drag{stroke:var(--acc);stroke-width:2;stroke-dasharray:4 3}
+#bes .sp{fill:var(--chrome2);stroke:var(--ln)}#bes .sp1{stroke:var(--muted);stroke-width:2}
+#bes .gl{stroke:var(--ln)}#bes .tri{fill:none;stroke:var(--acc);stroke-opacity:.35}
+#bes .ax{fill:var(--muted);font-size:10px}
+#bes .pt{cursor:grab}#bes .pt circle{fill:var(--acc);stroke:#fff;stroke-width:1.5}
+#bes .pt.sel circle{fill:#e8a33d}
+#bes .pt .pw{fill:var(--muted);font-size:10px}
+#bes .bp{stroke:#e5484d;stroke-width:2.5}#bes .bpc{fill:#e5484d}
+@media (max-width:700px){#bei{width:150px}.beh b{display:none}}
 .card .ad{display:inline-block;margin-top:4px;font-size:11px;color:var(--acc);text-decoration:underline}
 #xp{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);right:10px;width:min(360px,92vw);max-height:66vh;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px;display:none;backdrop-filter:blur(6px)}
 #xp.show{display:block}
@@ -151,6 +191,18 @@ select.b{max-width:200px}
     <canvas id="c"></canvas>
     <div id="drop">Drop an .fbx file here<br><small>or use “Open FBX”</small></div>
     <div id="over"></div>
+    <section id="be" aria-label="Blend tree editor">
+      <div class="beh">
+        <b>AnimationTree</b><span id="bcr" class="bcr"></span><span class="sp"></span>
+        <button class="b" id="beAddC" title="Add an animation state">+ Animation</button>
+        <button class="b" id="beAdd1" title="Add a BlendSpace1D state">+ BlendSpace1D</button>
+        <button class="b" id="beAdd2" title="Add a BlendSpace2D state">+ BlendSpace2D</button>
+        <button class="b" id="beCon" title="Connect mode: drag from one state to another">Connect</button>
+        <button class="b" id="bePlay">▶ Preview tree</button>
+        <button class="b" id="beX" title="Close editor">✕</button>
+      </div>
+      <div class="beb"><svg id="bes"></svg><div id="bei"></div></div>
+    </section>
   </main>
   <aside id="dock">
     <div id="tabs">
@@ -173,6 +225,7 @@ select.b{max-width:200px}
             <label id="bfl" style="display:none">Fade (s)<input class="b" type="number" id="bf" min="0.05" step="0.05" value="0.4"></label>
           </div>
           <div class="blb"><button class="b" id="bpv">Preview</button><button class="b primary" id="bk">Bake as new clip</button></div>
+          <button class="b" id="beOpen" style="width:100%;margin-top:6px">Open visual editor (Godot AnimationTree style)</button>
           <div class="hint2">Baked clips are saved in FBX and GLB. The Godot export also turns each blend into an AnimationTree node.</div>
         </div>
         <div class="hint2">Works with animations from the same rig (e.g. Mixamo “Without Skin”). You can also drop .fbx files onto this panel. Added clips are saved with the project in Recent.</div></div>
@@ -246,7 +299,8 @@ function frame(){
   grid.position.y=box.min.y;grid.visible=$('gr').classList.contains('on');scene.add(grid);
 }
 
-function load(buf,name,saved,extra){
+function load(buf,name,saved,extra,savedTree){
+  if(typeof tpOff==='function'){tpOff();$('be').classList.remove('show')}
   if(obj){scene.remove(obj);obj.traverse(o=>{if(o.geometry)o.geometry.dispose()});obj=null}
   mixer=null;actions=[];cur=null;fname=name;
   try{
@@ -276,13 +330,14 @@ function load(buf,name,saved,extra){
     });
     play(0);showAnim(true);
   }else showAnim(false);
+  tree=savedTree||null;treePrune();
   curBuf=buf;saveProj();renderAnimList();
   info.textContent=`${name} · ${meshes} meshes · ${Math.round(tris).toLocaleString()} tris · ${actions.length} anim · ${bones} bones · ${texN} tex`;
 }
 function showAnim(on){['an','pp','rn','tl'].forEach(id=>$(id).style.display=on?'':'none')}
 function play(i){
   $('an').value=i;$('rn').value=obj.animations[i].name;
-  if(cur)cur.stop();stopPreview();
+  tpOff();if(cur)cur.stop();stopPreview();
   cur=actions[i];cur.setLoop(loopOn?THREE.LoopRepeat:THREE.LoopOnce,Infinity);cur.clampWhenFinished=true;cur.reset().play();paused=false;$('pp').textContent='Pause';if($('ap').classList.contains('show'))renderAnimList();
 }
 function readFile(file){
@@ -290,7 +345,7 @@ function readFile(file){
   if(!/\.fbx$/i.test(file.name)){info.textContent='Not an .fbx file';return}
   info.textContent='Loading…';
   const fr=new FileReader();
-  fr.onload=async()=>{let rec=null;try{rec=await st('readonly',s=>s.get(file.name+'|'+fr.result.byteLength))}catch(e){}load(fr.result,file.name,rec&&rec.names,rec&&rec.extra)};
+  fr.onload=async()=>{let rec=null;try{rec=await st('readonly',s=>s.get(file.name+'|'+fr.result.byteLength))}catch(e){}load(fr.result,file.name,rec&&rec.names,rec&&rec.extra,rec&&rec.tree)};
   fr.onerror=()=>info.textContent='Read error';
   fr.readAsArrayBuffer(file);
 }
@@ -546,44 +601,6 @@ function fbxSpec(){
   return `FBX ${(v/1000).toFixed(1)} binary · original mesh, skin, materials kept · ${obj.animations.length} clip${obj.animations.length===1?'':'s'} (${baseCount} in model${ren?', '+ren+' renamed':''}, ${add} added)`+
     (obj.animations.length?' · '+obj.animations.map(c=>c.name+' '+c.duration.toFixed(1)+'s').join(', '):'');
 }
-/* Godot 4: GLB + scene with an AnimationTree (state machine of all clips, blends as BlendSpace1D / crossfade transitions) */
-function godotNames(){
-  const used=new Set();
-  return obj.animations.map(c=>{let b=(c.name||'Clip').replace(/[\s\/\\:,\[\]".@%^*|<>?]+/g,'_').trim()||'Clip',u=b,q=2;while(used.has(u))u=b+'_'+(q++);used.add(u);return u});
-}
-function godotScene(glbName,names){
-  const res=[],sub=(type,body)=>{const id=type+'_'+res.length;res.push(`[sub_resource type="${type}" id="${id}"]\n${body}`);return id};
-  const q=v=>JSON.stringify(v),anim=n=>sub('AnimationNodeAnimation',`animation = &${q(n)}\n`);
-  const byName=new Map(obj.animations.map((c,i)=>[c.name,names[i]]));
-  const states=[],trans=[],params=[];
-  // plain clips (baked blends are left out: the tree builds the blend live instead)
-  obj.animations.forEach((c,i)=>{if(!(c.userData&&c.userData.blend)&&c.duration>0&&c.tracks.length)states.push({n:names[i],id:anim(names[i])})});
-  const xf=[];
-  obj.animations.forEach((c,i)=>{
-    const b=c.userData&&c.userData.blend;if(!b)return;
-    const A=byName.get(b.a),B=byName.get(b.b);if(!A||!B)return;
-    if(b.mode==='mix'){
-      const id=sub('AnimationNodeBlendSpace1D',`blend_point_0/node = SubResource(${q(anim(A))})\nblend_point_0/pos = 0.0\nblend_point_1/node = SubResource(${q(anim(B))})\nblend_point_1/pos = 1.0\nmin_space = 0.0\nmax_space = 1.0\nsync = true\n`);
-      states.push({n:names[i],id});params.push(`parameters/${names[i]}/blend_position = ${b.w}`);
-    }else xf.push({a:A,b:B,fade:b.fade});
-  });
-  if(!states.length)throw new Error('No clips to put in the AnimationTree');
-  const tr=(from,to,body)=>{trans.push(q(from),q(to),`SubResource(${q(sub('AnimationNodeStateMachineTransition',body))})`)};
-  tr('Start',states[0].n,'advance_mode = 2\n');
-  const names2=new Set(states.map(x=>x.n));
-  if(states.length<=16)states.forEach(x=>states.forEach(y=>{if(x!==y&&!xf.some(f=>f.a===x.n&&f.b===y.n))tr(x.n,y.n,'xfade_time = 0.2\n')}));
-  xf.forEach(f=>{if(names2.has(f.a)&&names2.has(f.b))tr(f.a,f.b,`xfade_time = ${f.fade}\nswitch_mode = 2\nadvance_mode = 1\n`)});
-  const sm=sub('AnimationNodeStateMachine',states.map((x,k)=>`states/${x.n}/node = SubResource(${q(x.id)})\nstates/${x.n}/position = Vector2(${200+(k%4)*180}, ${100+Math.floor(k/4)*110})\n`).join('')+`transitions = [${trans.join(', ')}]\n`);
-  const root=glbName.replace(/\.glb$/,'').replace(/[^\w-]+/g,'_');
-  return `[gd_scene load_steps=${res.length+2} format=3]\n\n[ext_resource type="PackedScene" path=${q(glbName)} id="1_glb"]\n\n`+res.join('\n')+
-    `\n[node name=${q(root)} instance=ExtResource("1_glb")]\n\n[node name="AnimationTree" type="AnimationTree" parent="."]\ntree_root = SubResource(${q(sm)})\nanim_player = NodePath("../AnimationPlayer")\n`+
-    (params.length?params.join('\n')+'\n':'');
-}
-function godotSpec(){
-  if(!obj)return 'Load a model first';
-  const bl=obj.animations.filter(c=>c.userData&&c.userData.blend),plain=obj.animations.filter(c=>!(c.userData&&c.userData.blend)&&c.duration>0&&c.tracks.length).length,mix=bl.filter(c=>c.userData.blend.mode==='mix').length;
-  return `${plain} states · ${mix} BlendSpace1D · ${bl.length-mix} crossfade transitions · Godot 4.2+`;
-}
 document.querySelectorAll('#xp [data-k]').forEach(b=>b.onclick=()=>doExport(b.dataset.k));
 $('xb').onclick=()=>{
   const b=$('xp');b.classList.toggle('show');
@@ -594,8 +611,9 @@ function renameClip(i,v){
   v=(v||'').trim();if(!obj||!v||!obj.animations[i])return false;
   const was=obj.animations[i].name;
   obj.animations.forEach(c=>{const b=c.userData&&c.userData.blend;if(b){if(b.a===was)b.a=v;if(b.b===was)b.b=v}});
+  treeRename(was,v);
   obj.animations[i].name=v;$('an').options[i].text=v;if(+$('an').value===i)$('rn').value=v;
-  saveProj();syncBlendSel();return true;
+  saveProj();syncBlendSel();beDraw();return true;
 }
 $('rn').onchange=e=>{if(renameClip(+$('an').value,e.target.value))renderAnimList()};
 
@@ -606,7 +624,7 @@ async function st(mode,fn){const d=await idb();return new Promise((res,rej)=>{co
 async function saveProj(){
   if(!curBuf||!obj)return;
   try{
-    const sn=snap();await st('readwrite',s=>s.put({id:fname+'|'+curBuf.byteLength,name:fname,buf:curBuf,names:sn.names,extra:sn.extra,date:Date.now()}));
+    const sn=snap();await st('readwrite',s=>s.put({id:fname+'|'+curBuf.byteLength,name:fname,buf:curBuf,names:sn.names,extra:sn.extra,tree:sn.tree,date:Date.now()}));
     const all=(await st('readonly',s=>s.getAll())).sort((a,b)=>b.date-a.date);
     for(const r of all.slice(8))await st('readwrite',s=>s.delete(r.id));
     if($('rp').classList.contains('show'))renderRecent();
@@ -623,7 +641,7 @@ async function renderRecent(){
     const sm=document.createElement('small');
     sm.textContent=(r.buf.byteLength/1048576).toFixed(1)+' MB · '+new Date(r.date).toLocaleString()+(r.names.length?' · '+r.names.length+' clip':'');
     o.appendChild(sm);
-    o.onclick=()=>{texMap={};box.classList.remove('show');fname=r.name;load(r.buf,r.name,r.names,r.extra)};
+    o.onclick=()=>{texMap={};box.classList.remove('show');fname=r.name;load(r.buf,r.name,r.names,r.extra,r.tree)};
     const x=document.createElement('button');x.className='b';x.textContent='✕';x.title='Remove';
     x.onclick=async()=>{try{await st('readwrite',s=>s.delete(r.id))}catch(e){}renderRecent()};
     row.append(o,x);box.appendChild(row);
@@ -632,6 +650,7 @@ async function renderRecent(){
 $('rc').onclick=()=>{const b=$('rp');$('gp').classList.remove('show');$('st').classList.remove('show');$('ap').classList.remove('show');$('xp').classList.remove('show');b.classList.toggle('show');if(b.classList.contains('show'))renderRecent()};
 $('an').onchange=e=>play(+e.target.value);
 function togglePlay(){
+  if(tpl.on){paused=!paused;actions.forEach(a=>a.paused=paused);return}
   if(!cur)return;
   const d=cur.getClip().duration;
   if(!loopOn&&cur.time>=d-1e-3){cur.reset().play();paused=false}
@@ -753,12 +772,12 @@ function readFiles(list){
   if(fbx)texMap={};
   imgs.forEach(f=>{texMap[f.name.toLowerCase()]=URL.createObjectURL(f)});
   if(fbx)readFile(fbx);
-  else if(imgs.length&&curBuf){info.textContent='Applying textures…';const sn=snap();load(curBuf,fname,sn.names,sn.extra)}
+  else if(imgs.length&&curBuf){info.textContent='Applying textures…';const sn=snap();load(curBuf,fname,sn.names,sn.extra,sn.tree)}
   else info.textContent='Drop an .fbx file (plus optional png/jpg textures)';
 }
 
 /* animation list */
-function snap(){return{names:obj.animations.map(c=>c.name),extra:obj.animations.slice(baseCount).map(c=>({src:(c.userData&&c.userData.src)||'',blend:c.userData&&c.userData.blend,json:THREE.AnimationClip.toJSON(c)}))}}
+function snap(){return{tree:tree?JSON.parse(JSON.stringify(tree)):null,names:obj.animations.map(c=>c.name),extra:obj.animations.slice(baseCount).map(c=>({src:(c.userData&&c.userData.src)||'',blend:c.userData&&c.userData.blend,json:THREE.AnimationClip.toJSON(c)}))}}
 function syncSel(){const sel=$('an');sel.innerHTML='';obj.animations.forEach((c,i)=>sel.add(new Option(c.name||('Clip '+(i+1)),i)))}
 function renderAnimList(){
   const box=$('al');box.textContent='';syncBlendSel();
@@ -799,24 +818,18 @@ function blendOpts(){
   const a=+$('ba').value,b=+$('bb').value,mode=$('bm').value;
   return{a,b,mode,w:+$('bw').value/100,fade:Math.max(.05,+$('bf').value||.4)};
 }
-function bakeBlend(o){
-  const A=obj.animations[o.a],B=obj.animations[o.b];
-  if(!A||!B||A===B)throw new Error('Pick two different clips');
-  const dA=A.duration,dB=B.duration,fade=Math.min(o.fade,dA,dB);
-  const D=o.mode==='mix'?dA*(1-o.w)+dB*o.w:dA+dB-fade;
-  const fps=30,n=Math.max(2,Math.round(D*fps)+1);
-  const keys=new Map();
-  [A,B].forEach(c=>c.tracks.forEach(t=>{const pt=THREE.PropertyBinding.parseTrackName(t.name);if(/^(position|quaternion|scale)$/.test(pt.propertyName))keys.set(t.name,pt)}));
-  const tgt=[];keys.forEach((pt,name)=>{const nd=THREE.PropertyBinding.findNode(obj,pt.nodeName);if(nd)tgt.push({name,nd,p:pt.propertyName,t:[],v:[]})});
+// sample clips through a temporary mixer: at(t) gives [{time,w}] per clip
+function bakeSample(clips,D,at,name){
+  const fps=30,n=Math.max(2,Math.round(D*fps)+1),keys=new Map();
+  clips.forEach(c=>c.tracks.forEach(t=>{const pt=THREE.PropertyBinding.parseTrackName(t.name);if(/^(position|quaternion|scale)$/.test(pt.propertyName))keys.set(t.name,pt)}));
+  const tgt=[];keys.forEach((pt,nm)=>{const nd=THREE.PropertyBinding.findNode(obj,pt.nodeName);if(nd)tgt.push({name:nm,nd,p:pt.propertyName,t:[],v:[]})});
   // start every bone from rest so a track missing in one clip blends against the bind pose
   obj.traverse(x=>{if(x.isSkinnedMesh)x.skeleton.pose()});
-  const bm=new THREE.AnimationMixer(obj),xa=bm.clipAction(A),xb=bm.clipAction(B),cl=(t,d)=>Math.min(Math.max(t,0),Math.max(d-1e-4,0));
-  xa.play();xb.play();
+  const bm=new THREE.AnimationMixer(obj),xs=clips.map(c=>{const a=bm.clipAction(c);a.play();return a});
   for(let k=0;k<n;k++){
-    const t=k/(n-1)*D;let wb;
-    if(o.mode==='mix'){const ph=D?t/D:0;xa.time=cl(ph*dA,dA);xb.time=cl(ph*dB,dB);wb=o.w}
-    else{const s0=dA-fade;xa.time=cl(t,dA);xb.time=cl(t-s0,dB);wb=Math.min(Math.max((t-s0)/fade,0),1)}
-    xa.setEffectiveWeight(1-wb);xb.setEffectiveWeight(wb);bm.update(0);
+    const t=k/(n-1)*D;
+    at(t).forEach((o,i)=>{xs[i].time=Math.min(Math.max(o.time,0),Math.max(clips[i].duration-1e-4,0));xs[i].setEffectiveWeight(o.w)});
+    bm.update(0);
     tgt.forEach(g=>{
       const val=g.nd[g.p],v=g.v,L=v.length;
       if(g.p==='quaternion'){
@@ -828,9 +841,17 @@ function bakeBlend(o){
     });
   }
   bm.stopAllAction();bm.uncacheRoot(obj);
-  const tracks=tgt.map(g=>new(g.p==='quaternion'?THREE.QuaternionKeyframeTrack:THREE.VectorKeyframeTrack)(g.name,g.t,g.v));
+  return new THREE.AnimationClip(name,D,tgt.map(g=>new(g.p==='quaternion'?THREE.QuaternionKeyframeTrack:THREE.VectorKeyframeTrack)(g.name,g.t,g.v)));
+}
+function bakeBlend(o){
+  const A=obj.animations[o.a],B=obj.animations[o.b];
+  if(!A||!B||A===B)throw new Error('Pick two different clips');
+  const dA=A.duration,dB=B.duration,fade=Math.min(o.fade,dA,dB);
+  const D=o.mode==='mix'?dA*(1-o.w)+dB*o.w:dA+dB-fade;
+  const at=o.mode==='mix'?t=>{const ph=D?t/D:0;return[{time:ph*dA,w:1-o.w},{time:ph*dB,w:o.w}]}
+    :t=>{const s0=dA-fade,wb=Math.min(Math.max((t-s0)/fade,0),1);return[{time:t,w:1-wb},{time:t-s0,w:wb}]};
   const name=o.mode==='mix'?`${A.name} + ${B.name} ${Math.round(o.w*100)}%`:`${A.name} → ${B.name}`;
-  const clip=new THREE.AnimationClip(name,D,tracks);
+  const clip=bakeSample([A,B],D,at,name);
   clip.userData={src:'blend',blend:{a:A.name,b:B.name,mode:o.mode,w:o.w,fade}};
   return clip;
 }
@@ -860,7 +881,7 @@ function removeClip(i){
   if(i<baseCount||!obj.animations[i])return;
   const clip=obj.animations[i],act=actions[i];
   act.stop();mixer.uncacheAction(clip);mixer.uncacheClip(clip);
-  obj.animations.splice(i,1);actions.splice(i,1);syncSel();
+  obj.animations.splice(i,1);actions.splice(i,1);syncSel();treePrune();beDraw();
   if(cur===act){
     cur=null;
     if(obj.animations.length)play(Math.min(i,obj.animations.length-1));else showAnim(false);
@@ -912,6 +933,397 @@ $('ab').onclick=()=>{
 };
 $('af').onchange=e=>{addAnims(e.target.files);e.target.value=''};
 $('ap').addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();$('over').style.display='none';addAnims(e.dataTransfer.files)});
+
+/* blend tree: Godot-style state machine + BlendSpace1D/2D, live preview, Godot export */
+let tree=null,beSel=null,beView=null,beCon=false,beAdd=false;
+const tpl={on:false,cur:null,prev:null,f:0,fd:0,pend:null};
+const clipIdx=n=>obj?obj.animations.findIndex(c=>c.name===n):-1;
+const playable=()=>obj?obj.animations.filter(c=>c.duration>0&&c.tracks.length):[];
+const stById=id=>tree&&tree.states.find(s=>s.id===id);
+let stSeq=0;const newId=()=>'s'+Date.now().toString(36)+(stSeq++);
+function defaultTree(){
+  const t={states:[],trans:[],start:null,sx:40,sy:40};
+  const pos=k=>({gx:200+(k%4)*170,gy:40+Math.floor(k/4)*90});
+  const plain=playable().filter(c=>!(c.userData&&c.userData.blend));
+  plain.forEach(c=>t.states.push({id:newId(),name:c.name,type:'clip',clip:c.name,...pos(t.states.length)}));
+  playable().forEach(c=>{
+    const b=c.userData&&c.userData.blend;if(!b||b.mode!=='mix')return;
+    t.states.push({id:newId(),name:c.name,type:'bs1d',min:[0,0],max:[1,1],bx:b.w,by:0,points:[{clip:b.a,x:0,y:0},{clip:b.b,x:1,y:0}],...pos(t.states.length)});
+  });
+  if(t.states.length){
+    t.start=t.states[0].id;
+    t.states.slice(1).forEach(s=>{t.trans.push({from:t.start,to:s.id,xfade:.2,mode:0},{from:s.id,to:t.start,xfade:.2,mode:0})});
+    playable().forEach(c=>{
+      const b=c.userData&&c.userData.blend;if(!b||b.mode!=='xf')return;
+      const A=t.states.find(s=>s.type==='clip'&&s.clip===b.a),B=t.states.find(s=>s.type==='clip'&&s.clip===b.b);
+      if(!A||!B)return;
+      const ex=t.trans.find(x=>x.from===A.id&&x.to===B.id);
+      if(ex){ex.xfade=b.fade;ex.mode=2}else t.trans.push({from:A.id,to:B.id,xfade:b.fade,mode:2});
+    });
+  }
+  return t;
+}
+const ensureTree=()=>tree||(tree=defaultTree());
+function treeRename(was,v){
+  if(!tree)return;
+  tree.states.forEach(s=>{if(s.clip===was)s.clip=v;if(s.type==='clip'&&s.name===was)s.name=v;(s.points||[]).forEach(p=>{if(p.clip===was)p.clip=v})});
+}
+function treePrune(){
+  if(!tree)return;
+  tree.states.forEach(s=>{if(s.points)s.points=s.points.filter(p=>clipIdx(p.clip)>=0)});
+  const gone=tree.states.filter(s=>s.type==='clip'&&clipIdx(s.clip)<0).map(s=>s.id);
+  tree.states=tree.states.filter(s=>!gone.includes(s.id));
+  tree.trans=tree.trans.filter(x=>!gone.includes(x.from)&&!gone.includes(x.to));
+  if(gone.includes(tree.start))tree.start=tree.states[0]?tree.states[0].id:null;
+  if(gone.includes(tpl.cur))tpl.cur=tree.start;
+}
+/* blend weights, same rules as Godot: 1D lerp between neighbours, 2D barycentric over a Delaunay triangulation */
+function w1d(pts,p){
+  const W=pts.map(()=>0);if(!pts.length)return W;
+  const o=pts.map((q,i)=>i).sort((a,b)=>pts[a].x-pts[b].x),f=o[0],l=o[o.length-1];
+  if(p<=pts[f].x){W[f]=1;return W}
+  if(p>=pts[l].x){W[l]=1;return W}
+  for(let k=0;k<o.length-1;k++){
+    const a=pts[o[k]],b=pts[o[k+1]];
+    if(p>=a.x&&p<=b.x){const t=b.x>a.x?(p-a.x)/(b.x-a.x):0;W[o[k]]=1-t;W[o[k+1]]=t;return W}
+  }
+  return W;
+}
+function delaunay(pts){
+  const T=[],n=pts.length;
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)for(let k=j+1;k<n;k++){
+    const A=pts[i],B=pts[j],C=pts[k],d=2*(A.x*(B.y-C.y)+B.x*(C.y-A.y)+C.x*(A.y-B.y));
+    if(Math.abs(d)<1e-9)continue;
+    const a2=A.x*A.x+A.y*A.y,b2=B.x*B.x+B.y*B.y,c2=C.x*C.x+C.y*C.y;
+    const ux=(a2*(B.y-C.y)+b2*(C.y-A.y)+c2*(A.y-B.y))/d,uy=(a2*(C.x-B.x)+b2*(A.x-C.x)+c2*(B.x-A.x))/d,r=Math.hypot(A.x-ux,A.y-uy);
+    if(pts.every((P,m)=>m===i||m===j||m===k||Math.hypot(P.x-ux,P.y-uy)>=r-1e-9))T.push([i,j,k]);
+  }
+  return T;
+}
+function w2d(pts,px,py){
+  const W=pts.map(()=>0),n=pts.length;if(!n)return W;if(n===1){W[0]=1;return W}
+  const T=delaunay(pts);
+  for(const [i,j,k] of T){
+    const A=pts[i],B=pts[j],C=pts[k],d=(B.y-C.y)*(A.x-C.x)+(C.x-B.x)*(A.y-C.y);
+    const u=((B.y-C.y)*(px-C.x)+(C.x-B.x)*(py-C.y))/d,v=((C.y-A.y)*(px-C.x)+(A.x-C.x)*(py-C.y))/d,w=1-u-v;
+    if(u>=-1e-6&&v>=-1e-6&&w>=-1e-6){W[i]=u;W[j]=v;W[k]=w;return W}
+  }
+  const E=[];
+  if(T.length)T.forEach(([i,j,k])=>E.push([i,j],[j,k],[k,i]));else for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)E.push([i,j]);
+  let best=null;
+  E.forEach(([a,b])=>{
+    const A=pts[a],B=pts[b],dx=B.x-A.x,dy=B.y-A.y,L=dx*dx+dy*dy;
+    const t=L?Math.min(Math.max(((px-A.x)*dx+(py-A.y)*dy)/L,0),1):0,d=Math.hypot(A.x+dx*t-px,A.y+dy*t-py);
+    if(!best||d<best.d)best={d,a,b,t};
+  });
+  W[best.a]=1-best.t;W[best.b]=best.t;return W;
+}
+const spaceW=s=>s.type==='bs1d'?w1d(s.points,s.bx):w2d(s.points,s.bx,s.by);
+function stateWeights(s){
+  const m=new Map();if(!s)return m;
+  if(s.type==='clip'){if(clipIdx(s.clip)>=0)m.set(s.clip,1);return m}
+  const W=spaceW(s);
+  s.points.forEach((p,i)=>{if(clipIdx(p.clip)>=0&&W[i]>0)m.set(p.clip,(m.get(p.clip)||0)+W[i])});
+  return m;
+}
+/* live preview: every clip runs in the main mixer, weights are set each frame from the active state(s) */
+function tpOn(){
+  if(!obj||!mixer||!ensureTree().states.length)return false;
+  if(tpl.on)return true;
+  if(previewClip)stopPreview();
+  actions.forEach(a=>{a.stop();a.setEffectiveWeight(0);a.setLoop(THREE.LoopRepeat,Infinity);a.play()});
+  tpl.on=true;tpl.cur=tpl.cur&&stById(tpl.cur)?tpl.cur:tree.start;tpl.prev=null;tpl.pend=null;paused=false;
+  $('bePlay').classList.add('on');$('bePlay').textContent='■ Stop preview';
+  return true;
+}
+function tpOff(){
+  if(!tpl.on)return;
+  tpl.on=false;tpl.prev=null;tpl.pend=null;
+  actions.forEach(a=>{a.stop();a.setEffectiveWeight(1);a.paused=false});cur=null;
+  $('bePlay').classList.remove('on');$('bePlay').textContent='▶ Preview tree';
+}
+function travel(id){
+  if(!tpOn()||!stById(id))return;
+  if(id===tpl.cur&&!tpl.prev)return;
+  const tr=tree.trans.find(x=>x.from===tpl.cur&&x.to===id);
+  if(tr&&tr.mode===2){tpl.pend={to:id,fd:tr.xfade};info.textContent='Waiting for the end of the current state…';return}
+  goState(id,tr?tr.xfade:.2);
+}
+function goState(id,fd){
+  const old=stateWeights(stById(tpl.cur));
+  stateWeights(stById(id)).forEach((w,n)=>{if(!old.has(n)){const a=actions[clipIdx(n)];if(a)a.time=0}});
+  tpl.prev=tpl.cur;tpl.cur=id;tpl.f=0;tpl.fd=Math.max(fd,0);tpl.pend=null;
+  if(!tpl.fd)tpl.prev=null;
+  const s=stById(id);if(s)info.textContent='State: '+s.name;
+  beDraw();
+}
+function mainAction(s){let b=null,bw=-1;stateWeights(s).forEach((w,n)=>{if(w>bw){bw=w;b=actions[clipIdx(n)]}});return b}
+function tpUpdate(dt){
+  if(!tpl.on||!obj)return;
+  if(tpl.pend){
+    const a=mainAction(stById(tpl.cur));
+    if(!a||a.time+tpl.pend.fd>=a.getClip().duration-dt)goState(tpl.pend.to,tpl.pend.fd);
+  }
+  if(tpl.prev){tpl.f+=dt;if(tpl.f>=tpl.fd)tpl.prev=null}
+  const k=tpl.prev?Math.min(tpl.f/tpl.fd,1):1,W=new Map();
+  stateWeights(stById(tpl.cur)).forEach((w,n)=>W.set(n,w*k));
+  if(tpl.prev)stateWeights(stById(tpl.prev)).forEach((w,n)=>W.set(n,(W.get(n)||0)+w*(1-k)));
+  actions.forEach((a,i)=>a.setEffectiveWeight(W.get(obj.animations[i].name)||0));
+  cur=mainAction(stById(tpl.cur));
+  const pb=document.querySelector('#bes .prog');
+  if(pb&&cur)pb.setAttribute('width',Math.max(0,Math.min(1,cur.time/(cur.getClip().duration||1)))*120);
+}
+/* bake the current blend-space position into a clip (Godot-like: each clip loops at its own speed) */
+function bakeSpace(s){
+  const items=[];stateWeights(s).forEach((w,n)=>{if(w>1e-4)items.push({c:obj.animations[clipIdx(n)],w})});
+  if(!items.length)throw new Error('No clip has weight here');
+  const D=items.reduce((a,b)=>b.w>a.w?b:a).c.duration;
+  const pos=s.type==='bs1d'?(+s.bx).toFixed(2):(+s.bx).toFixed(2)+', '+(+s.by).toFixed(2);
+  const clip=bakeSample(items.map(x=>x.c),D,t=>items.map(x=>({time:t%x.c.duration,w:x.w})),s.name+' @ '+pos);
+  clip.userData={src:'blend space'};return clip;
+}
+
+/* editor UI */
+const SVGNS='http://www.w3.org/2000/svg';
+function sv(tag,at,par){const e=document.createElementNS(SVGNS,tag);for(const k in at)e.setAttribute(k,at[k]);if(par)par.appendChild(e);return e}
+function beOpen(){
+  if(!obj||!playable().length){info.textContent='Load a model with animations first';return}
+  ensureTree();$('be').classList.add('show');beView=null;beSel=null;beDraw();
+}
+function beClose(){$('be').classList.remove('show');tpOff();if(obj&&actions.length)play(Math.max(0,+$('an').value||0))}
+function beSave(){beDraw();saveProj()}
+function beDraw(){
+  if(!$('be').classList.contains('show')||!tree)return;
+  const svg=$('bes');svg.textContent='';
+  const w=svg.clientWidth||600,h=svg.clientHeight||260;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  const st=beView&&stById(beView);
+  const bc=$('bcr');bc.textContent='';
+  const r=document.createElement('a');r.textContent='Root';r.onclick=()=>{beView=null;beSel=null;beAdd=false;beDraw()};bc.appendChild(r);
+  if(st){bc.append(' › ');const s=document.createElement('span');s.textContent=st.name+(st.type==='bs1d'?' · BlendSpace1D':' · BlendSpace2D');bc.appendChild(s)}
+  ['beAddC','beAdd1','beAdd2','beCon'].forEach(id=>$(id).style.display=st?'none':'');
+  $('beCon').classList.toggle('on',beCon);
+  if(st)drawSpace(svg,st,w,h);else drawGraph(svg,w,h);
+  beInspector();
+}
+function drawGraph(svg,w,h){
+  const NW=120,NH=40,ctr=s=>s==='start'?{x:tree.sx+35,y:tree.sy+15}:{x:s.gx+NW/2,y:s.gy+NH/2};
+  const edge=(a,b,cls,data,label)=>{
+    const A=ctr(a),B=ctr(b),dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy)||1,ox=-dy/L*6,oy=dx/L*6;
+    const g=sv('g',{class:'ed '+cls},svg);
+    sv('line',{x1:A.x+ox,y1:A.y+oy,x2:B.x+ox,y2:B.y+oy,class:'hit'},g);
+    sv('line',{x1:A.x+ox,y1:A.y+oy,x2:B.x+ox,y2:B.y+oy,class:'ln'},g);
+    const mx=(A.x+B.x)/2+ox,my=(A.y+B.y)/2+oy;
+    sv('path',{d:'M-6 -5L6 0L-6 5z',transform:`translate(${mx},${my}) rotate(${Math.atan2(dy,dx)*180/Math.PI})`,class:'ah'},g);
+    if(label){const t=sv('text',{x:mx+ox*1.8,y:my+oy*1.8+4,class:'el','text-anchor':'middle'},g);t.textContent=label}
+    if(data)g.onpointerdown=e=>{e.stopPropagation();beSel={t:'tr',o:data};beDraw()};
+  };
+  const s0=stById(tree.start);if(s0)edge('start',s0,'auto');
+  tree.trans.forEach(x=>{const a=stById(x.from),b=stById(x.to);if(a&&b)edge(a,b,(beSel&&beSel.o===x?'sel ':'')+(x.mode===2?'atend':''),x,(x.mode===2?'⏭ ':'')+x.xfade+'s')});
+  const sg=sv('g',{class:'nd start',transform:`translate(${tree.sx},${tree.sy})`},svg);
+  sv('rect',{width:70,height:30,rx:15},sg);const stt=sv('text',{x:35,y:19,'text-anchor':'middle'},sg);stt.textContent='Start';
+  dragNode(sg,'start');
+  tree.states.forEach(s=>{
+    const on=tpl.on&&tpl.cur===s.id;
+    const g=sv('g',{class:'nd st'+(beSel&&beSel.o===s?' sel':'')+(on?' on':''),transform:`translate(${s.gx},${s.gy})`},svg);
+    g.dataset.id=s.id;
+    sv('rect',{width:NW,height:NH,rx:6},g);
+    const t1=sv('text',{x:10,y:17,class:'nt'},g);t1.textContent=s.name.length>15?s.name.slice(0,14)+'…':s.name;
+    const t2=sv('text',{x:10,y:31,class:'ns'},g);t2.textContent=s.type==='clip'?'Animation':s.type==='bs1d'?'BlendSpace1D':'BlendSpace2D';
+    if(s.type!=='clip'){const ed=sv('text',{x:NW-10,y:25,'text-anchor':'end',class:'nedit'},g);ed.textContent='✎';ed.onpointerdown=e=>{e.stopPropagation();beView=s.id;beSel=null;beDraw()}}
+    if(on)sv('rect',{x:0,y:NH-3,width:0,height:3,class:'prog'},g);
+    dragNode(g,s);
+  });
+  svg.onpointerdown=e=>{if(e.target===svg){beSel=null;beDraw()}};
+}
+function dragNode(g,s){
+  g.onpointerdown=e=>{
+    e.stopPropagation();e.preventDefault();
+    const svg=$('bes'),pt=ev=>{const r=svg.getBoundingClientRect();return{x:ev.clientX-r.left,y:ev.clientY-r.top}};
+    const p0=pt(e),isS=s==='start',o0=isS?{x:tree.sx,y:tree.sy}:{x:s.gx,y:s.gy},con=beCon||e.shiftKey||isS;let moved=false,line=null;
+    const mv=ev=>{
+      const p=pt(ev);if(Math.hypot(p.x-p0.x,p.y-p0.y)>3)moved=true;
+      if(con&&!(isS&&ev.altKey)){if(!line)line=sv('line',{x1:p0.x,y1:p0.y,x2:p0.x,y2:p0.y,class:'drag'},svg);line.setAttribute('x2',p.x);line.setAttribute('y2',p.y);return}
+      const nx=Math.max(0,o0.x+p.x-p0.x),ny=Math.max(0,o0.y+p.y-p0.y);
+      if(isS){tree.sx=nx;tree.sy=ny}else{s.gx=nx;s.gy=ny}
+      g.setAttribute('transform',`translate(${nx},${ny})`);
+    };
+    const up=ev=>{
+      removeEventListener('pointermove',mv);removeEventListener('pointerup',up);
+      if(line){
+        const el=document.elementFromPoint(ev.clientX,ev.clientY),tg=el&&el.closest&&el.closest('#bes .nd.st'),to=tg&&stById(tg.dataset.id);
+        if(to&&to!==s){
+          if(isS)tree.start=to.id;
+          else if(!tree.trans.some(x=>x.from===s.id&&x.to===to.id)){const x={from:s.id,to:to.id,xfade:.2,mode:0};tree.trans.push(x);beSel={t:'tr',o:x}}
+        }
+        beSave();return;
+      }
+      if(moved){beSave();return}
+      if(!isS){beSel={t:'st',o:s};if(tpl.on)travel(s.id);beDraw()}
+    };
+    addEventListener('pointermove',mv);addEventListener('pointerup',up);
+  };
+  if(s!=='start')g.ondblclick=()=>{if(s.type==='clip')travel(s.id);else{beView=s.id;beSel=null;beDraw()}};
+}
+function drawSpace(svg,s,w,h){
+  const is2=s.type==='bs2d',pad=40,sx=s.max[0]-s.min[0]||1,sy=s.max[1]-s.min[1]||1;
+  const X=v=>pad+(v-s.min[0])/sx*(w-2*pad),Y=v=>is2?h-pad-(v-s.min[1])/sy*(h-2*pad):h/2;
+  const ix=px=>s.min[0]+(px-pad)/(w-2*pad)*sx,iy=py=>is2?s.min[1]+(h-pad-py)/(h-2*pad)*sy:0;
+  const cl=(v,a,b)=>Math.min(Math.max(v,Math.min(a,b)),Math.max(a,b));
+  if(is2){
+    sv('rect',{x:pad,y:pad,width:w-2*pad,height:h-2*pad,class:'sp'},svg);
+    for(let k=1;k<4;k++){sv('line',{x1:pad+k*(w-2*pad)/4,y1:pad,x2:pad+k*(w-2*pad)/4,y2:h-pad,class:'gl'},svg);sv('line',{x1:pad,y1:pad+k*(h-2*pad)/4,x2:w-pad,y2:pad+k*(h-2*pad)/4,class:'gl'},svg)}
+    delaunay(s.points).forEach(([a,b,c])=>sv('polygon',{points:[a,b,c].map(i=>X(s.points[i].x)+','+Y(s.points[i].y)).join(' '),class:'tri'},svg));
+    [[s.min[0],pad,'start'],[s.max[0],w-pad,'end']].forEach(([v,x,a])=>{const t=sv('text',{x,y:h-pad+16,'text-anchor':a,class:'ax'},svg);t.textContent=v});
+    [[s.min[1],h-pad],[s.max[1],pad+10]].forEach(([v,y])=>{const t=sv('text',{x:pad-6,y,'text-anchor':'end',class:'ax'},svg);t.textContent=v});
+  }else{
+    sv('line',{x1:pad,y1:h/2,x2:w-pad,y2:h/2,class:'sp1'},svg);
+    for(let k=0;k<=4;k++){const x=pad+k*(w-2*pad)/4;sv('line',{x1:x,y1:h/2-5,x2:x,y2:h/2+5,class:'gl'},svg);const t=sv('text',{x,y:h/2+24,'text-anchor':'middle',class:'ax'},svg);t.textContent=+(s.min[0]+k*sx/4).toFixed(2)}
+  }
+  const pw=spaceW(s);
+  s.points.forEach((p,i)=>{
+    const g=sv('g',{class:'pt'+(beSel&&beSel.o===p?' sel':''),transform:`translate(${X(p.x)},${Y(p.y)})`},svg);
+    sv('circle',{r:6+pw[i]*6},g);
+    const t=sv('text',{y:-15,'text-anchor':'middle'},g);t.textContent=p.clip.length>18?p.clip.slice(0,17)+'…':p.clip;
+    const t2=sv('text',{y:is2?26:-30,'text-anchor':'middle',class:'pw'},g);t2.textContent=Math.round(pw[i]*100)+'%';
+    g.onpointerdown=e=>{
+      e.stopPropagation();e.preventDefault();beSel={t:'pt',o:p};
+      const r=svg.getBoundingClientRect();
+      const mv=ev=>{p.x=+cl(ix(ev.clientX-r.left),s.min[0],s.max[0]).toFixed(3);if(is2)p.y=+cl(iy(ev.clientY-r.top),s.min[1],s.max[1]).toFixed(3);beDraw()};
+      const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);beSave()};
+      addEventListener('pointermove',mv);addEventListener('pointerup',up);beDraw();
+    };
+  });
+  const cx=X(cl(s.bx,s.min[0],s.max[0])),cy=Y(cl(s.by,s.min[1],s.max[1]));
+  if(is2){sv('line',{x1:cx-10,y1:cy,x2:cx+10,y2:cy,class:'bp'},svg);sv('line',{x1:cx,y1:cy-10,x2:cx,y2:cy+10,class:'bp'},svg);sv('circle',{cx,cy,r:4,class:'bpc'},svg)}
+  else{sv('line',{x1:cx,y1:h/2-14,x2:cx,y2:h/2+14,class:'bp'},svg);sv('circle',{cx,cy:h/2,r:4,class:'bpc'},svg)}
+  svg.onpointerdown=e=>{
+    if(e.target.closest&&e.target.closest('.pt'))return;
+    e.preventDefault();
+    const r=svg.getBoundingClientRect(),set=ev=>{
+      const x=+cl(ix(ev.clientX-r.left),s.min[0],s.max[0]).toFixed(3),y=+cl(iy(ev.clientY-r.top),s.min[1],s.max[1]).toFixed(3);
+      if(beAdd){const p={clip:$('beClip').value,x,y};if(clipIdx(p.clip)>=0){s.points.push(p);beSel={t:'pt',o:p}}beAdd=false;return true}
+      s.bx=x;s.by=y;return false;
+    };
+    if(set(e)){beSave();return}
+    if(tpOn()&&tpl.cur!==s.id)travel(s.id);
+    beDraw();
+    const mv=ev=>{set(ev);beDraw()},up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);beSave()};
+    addEventListener('pointermove',mv);addEventListener('pointerup',up);
+  };
+}
+function beInspector(){
+  const box=$('bei');box.textContent='';
+  const h=(t,cls)=>{const d=document.createElement('div');d.className=cls;d.textContent=t;box.appendChild(d);return d};
+  const field=(lab,el)=>{const l=document.createElement('label');l.className='bf';l.append(lab,el);box.appendChild(l);return el};
+  const inp=(v,on,num)=>{const i=document.createElement('input');i.className='b';i.value=v;if(num){i.type='number';i.step='0.05'}i.onchange=()=>on(i.value);return i};
+  const btn=(t,on,cls)=>{const b=document.createElement('button');b.className='b'+(cls?' '+cls:'');b.textContent=t;b.onclick=on;box.appendChild(b);return b};
+  const clipSel=v=>{const s=document.createElement('select');s.className='b';playable().forEach(c=>s.add(new Option(c.name,c.name)));if(v)s.value=v;return s};
+  const st=beView&&stById(beView);
+  if(st){
+    if(beSel&&beSel.t==='pt'){
+      const p=beSel.o;h('Blend point','bh');
+      const sel=clipSel(p.clip);sel.onchange=()=>{p.clip=sel.value;beSave()};field('Animation',sel);
+      field('Position X',inp(p.x,v=>{p.x=+v||0;beSave()},1));
+      if(st.type==='bs2d')field('Position Y',inp(p.y,v=>{p.y=+v||0;beSave()},1));
+      btn('Delete point',()=>{st.points.splice(st.points.indexOf(p),1);beSel=null;beSave()},'danger');
+      btn('Done',()=>{beSel=null;beDraw()});
+    }else{
+      h('Blend space','bh');
+      const sel=clipSel(playable()[0]&&playable()[0].name);sel.id='beClip';field('Clip for new point',sel);
+      btn(beAdd?'Click in the space…':'+ Add point',()=>{beAdd=!beAdd;beDraw()},beAdd?'on':'');
+      field('Blend position X',inp(st.bx,v=>{st.bx=+v||0;beSave()},1));
+      if(st.type==='bs2d')field('Blend position Y',inp(st.by,v=>{st.by=+v||0;beSave()},1));
+      field('Min X',inp(st.min[0],v=>{st.min[0]=+v;beSave()},1));field('Max X',inp(st.max[0],v=>{st.max[0]=+v;beSave()},1));
+      if(st.type==='bs2d'){field('Min Y',inp(st.min[1],v=>{st.min[1]=+v;beSave()},1));field('Max Y',inp(st.max[1],v=>{st.max[1]=+v;beSave()},1))}
+      btn('Bake this position as clip',()=>{
+        try{
+          const c=bakeSpace(st);let u=c.name,q=2;while(obj.animations.some(a=>a.name===u))u=c.name+' ('+(q++)+')';c.name=u;
+          const was=tpl.on;tpOff();obj.animations.push(c);afterAdd(1,[]);if(was){tpOn();travel(st.id)}info.textContent='Baked '+u;
+        }catch(e){info.textContent='Bake failed: '+e.message}
+      },'primary');
+    }
+    h('Drag a point to move it. Click or drag anywhere else to set the blend position: the model previews it live.','bn');
+    return;
+  }
+  if(beSel&&beSel.t==='st'){
+    const s=beSel.o;h('State','bh');
+    field('Name',inp(s.name,v=>{v=v.trim();if(v)s.name=v;beSave()}));
+    if(s.type==='clip'){const c=clipSel(s.clip);c.onchange=()=>{s.clip=c.value;beSave()};field('Animation',c)}
+    else btn('Edit blend space ✎',()=>{beView=s.id;beSel=null;beDraw()});
+    btn('▶ Play (travel)',()=>travel(s.id));
+    if(tree.start!==s.id)btn('Set as start',()=>{tree.start=s.id;beSave()});
+    btn('Delete state',()=>{tree.states.splice(tree.states.indexOf(s),1);tree.trans=tree.trans.filter(x=>x.from!==s.id&&x.to!==s.id);if(tree.start===s.id)tree.start=tree.states[0]?tree.states[0].id:null;if(tpl.cur===s.id){tpl.cur=tree.start;tpl.prev=null}beSel=null;beSave()},'danger');
+    return;
+  }
+  if(beSel&&beSel.t==='tr'){
+    const x=beSel.o,a=stById(x.from),b=stById(x.to);h('Transition','bh');h((a?a.name:'?')+' → '+(b?b.name:'?'),'bn');
+    field('Xfade time (s)',inp(x.xfade,v=>{x.xfade=Math.max(0,+v||0);beSave()},1));
+    const m=document.createElement('select');m.className='b';m.add(new Option('Immediate',0));m.add(new Option('At end',2));m.value=x.mode;m.onchange=()=>{x.mode=+m.value;beSave()};field('Switch mode',m);
+    btn('Delete transition',()=>{tree.trans.splice(tree.trans.indexOf(x),1);beSel=null;beSave()},'danger');
+    return;
+  }
+  h('State machine','bh');
+  h('Drag states to move them. Click a state to select it (it plays while preview is on). Double-click or ✎ opens a blend space. Connect: turn on Connect or Shift-drag from one state to another. Drag from Start to choose the start state (Alt-drag moves it).','bn');
+  btn('Reset from clips',()=>{tpOff();tree=defaultTree();beSel=null;beSave()});
+}
+function beAddState(type){
+  const t=ensureTree(),c=playable(),k=t.states.length,base={id:newId(),gx:200+(k%4)*170,gy:40+Math.floor(k/4)*90};
+  if(!c.length)return;
+  let s;
+  if(type==='clip'){const used=new Set(t.states.map(x=>x.clip));const pick=c.find(x=>!used.has(x.name))||c[0];s={...base,type,name:pick.name,clip:pick.name}}
+  else if(type==='bs1d')s={...base,type,name:'BlendSpace1D',min:[-1,0],max:[1,0],bx:0,by:0,points:c.slice(0,2).map((x,i)=>({clip:x.name,x:i?1:-1,y:0}))};
+  else s={...base,type,name:'BlendSpace2D',min:[-1,-1],max:[1,1],bx:0,by:0,points:c.slice(0,4).map((x,i)=>({clip:x.name,x:[0,-1,1,0][i],y:[0,0,0,1][i]}))};
+  let n=s.name,q=2;while(t.states.some(x=>x.name===n))n=s.name+' '+(q++);s.name=n;
+  t.states.push(s);if(!t.start)t.start=s.id;beSel={t:'st',o:s};beSave();
+}
+
+/* Godot 4: GLB + scene whose AnimationTree mirrors the blend tree above */
+function godotNames(){
+  const used=new Set();
+  return obj.animations.map(c=>{let b=(c.name||'Clip').replace(/[\s\/\\:,\[\]".@%^*|<>?]+/g,'_').trim()||'Clip',u=b,q=2;while(used.has(u))u=b+'_'+(q++);used.add(u);return u});
+}
+function godotScene(glbName,names){
+  const T=ensureTree(),res=[],sub=(type,body)=>{const id=type+'_'+res.length;res.push(`[sub_resource type="${type}" id="${id}"]\n${body}`);return id};
+  const q=v=>JSON.stringify(v),cn=new Map(obj.animations.map((c,i)=>[c.name,names[i]])),anim=n=>sub('AnimationNodeAnimation',`animation = &${q(cn.get(n))}\n`);
+  const num=v=>Number.isInteger(+v)?(+v).toFixed(1):String(+v),V2=(x,y)=>`Vector2(${num(x)}, ${num(y)})`;
+  const used=new Set(['Start','End']),sn=new Map(),states=[],params=[];
+  T.states.forEach(s=>{
+    let b=s.name.replace(/[\s\/\\:,\[\]".@%^*|<>?]+/g,'_')||'State',u=b,k=2;while(used.has(u))u=b+'_'+(k++);
+    let id;
+    if(s.type==='clip'){if(clipIdx(s.clip)<0)return;id=anim(s.clip)}
+    else{
+      const pts=s.points.filter(p=>clipIdx(p.clip)>=0);if(!pts.length)return;
+      const is2=s.type==='bs2d';
+      id=sub(is2?'AnimationNodeBlendSpace2D':'AnimationNodeBlendSpace1D',pts.map((p,i)=>`blend_point_${i}/node = SubResource(${q(anim(p.clip))})\nblend_point_${i}/pos = ${is2?V2(p.x,p.y):num(p.x)}\n`).join('')+
+        (is2?`min_space = ${V2(s.min[0],s.min[1])}\nmax_space = ${V2(s.max[0],s.max[1])}\n`:`min_space = ${num(s.min[0])}\nmax_space = ${num(s.max[0])}\n`)+'sync = true\n');
+      params.push(`parameters/${u}/blend_position = ${is2?V2(s.bx,s.by):num(s.bx)}`);
+    }
+    used.add(u);sn.set(s.id,u);states.push({n:u,id,s});
+  });
+  if(!states.length)throw new Error('No states to put in the AnimationTree');
+  const trans=[],tr=(from,to,body)=>trans.push(q(from),q(to),`SubResource(${q(sub('AnimationNodeStateMachineTransition',body))})`);
+  tr('Start',sn.get(T.start)||states[0].n,'advance_mode = 2\n');
+  T.trans.forEach(x=>{const a=sn.get(x.from),b=sn.get(x.to);if(a&&b)tr(a,b,`xfade_time = ${num(x.xfade)}\n`+(x.mode===2?'switch_mode = 2\n':''))});
+  const sm=sub('AnimationNodeStateMachine',`states/Start/position = ${V2(T.sx+35,T.sy+15)}\n`+states.map(x=>`states/${x.n}/node = SubResource(${q(x.id)})\nstates/${x.n}/position = ${V2(x.s.gx+60,x.s.gy+20)}\n`).join('')+`transitions = [${trans.join(', ')}]\n`);
+  const root=glbName.replace(/\.glb$/,'').replace(/[^\w-]+/g,'_');
+  return `[gd_scene load_steps=${res.length+2} format=3]\n\n[ext_resource type="PackedScene" path=${q(glbName)} id="1_glb"]\n\n`+res.join('\n')+
+    `\n[node name=${q(root)} instance=ExtResource("1_glb")]\n\n[node name="AnimationTree" type="AnimationTree" parent="."]\ntree_root = SubResource(${q(sm)})\nanim_player = NodePath("../AnimationPlayer")\n`+
+    (params.length?params.join('\n')+'\n':'');
+}
+function godotSpec(){
+  if(!obj)return 'Load a model first';
+  const T=ensureTree(),c=t=>T.states.filter(s=>s.type===t).length;
+  return `${c('clip')} animation states · ${c('bs1d')} BlendSpace1D · ${c('bs2d')} BlendSpace2D · ${T.trans.length} transitions · Godot 4.2+`;
+}
+$('beOpen').onclick=beOpen;$('beX').onclick=beClose;
+$('bePlay').onclick=()=>{if(tpl.on){tpOff();beDraw()}else if(tpOn())beDraw()};
+$('beAddC').onclick=()=>beAddState('clip');$('beAdd1').onclick=()=>beAddState('bs1d');$('beAdd2').onclick=()=>beAddState('bs2d');
+$('beCon').onclick=()=>{beCon=!beCon;beDraw()};
+new ResizeObserver(()=>beDraw()).observe($('bes'));
+addEventListener('keydown',e=>{
+  if(!$('be').classList.contains('show')||/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;
+  if((e.key==='Delete'||e.key==='Backspace')&&beSel){const b=[...$('bei').querySelectorAll('.danger')].pop();if(b)b.click()}
+});
 
 /* sample gallery */
 const SAMPLES=[
@@ -1029,7 +1441,8 @@ $('gl').onclick=()=>{const b=$('gp');b.classList.toggle('show');$('rp').classLis
 if(STANDALONE){const h=document.querySelector('#xp .hint');if(h)h.textContent='Files download directly as .fbx / .glb / .gltf / .obj / .stl / .ply (Godot export is a .zip). Hidden meshes (Mesh off) are left out of OBJ, STL and PLY.'}
 (function loop(){
   requestAnimationFrame(loop);
-  if(mixer)mixer.update(clock.getDelta());else clock.getDelta();
+  const dt=clock.getDelta();
+  if(mixer){tpUpdate(dt*mixer.timeScale);mixer.update(dt)}
   if(cur){
     const d=cur.getClip().duration,t=Math.min(cur.time%(d+1e-9)||(cur.time>=d?d:0),d),fin=!loopOn&&cur.time>=d-1e-3;
     if(!scrub)$('sc').value=d?Math.round(t/d*1000):0;
