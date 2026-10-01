@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FBX Studio – Free FBX Viewer &amp; Animation Tool</title>
+<meta name="description" content="Free browser-based FBX viewer: play, rename and merge animations, inspect bones and textures, export GLB, OBJ, STL and PLY. Runs fully offline in your browser, no upload.">
+<meta property="og:title" content="FBX Studio – Free FBX Viewer &amp; Animation Tool">
+<meta property="og:description" content="View FBX files, merge animations, export GLB/OBJ/STL/PLY. No upload, runs in your browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f6fed' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M12 3l8 4.5v9L12 21l-8-4.5v-9z'/%3E%3Cpath d='M12 12l8-4.5M12 12v9M12 12L4 7.5'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f2f2f0;--fg:#1a1a1a;--panel:#ffffffdd;--bd:#0002;--acc:#2f6fed;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16171a;--fg:#e8e8e8;--panel:#22242acc;--bd:#fff2}}
+:root[data-theme="dark"]{--bg:#16171a;--fg:#e8e8e8;--panel:#22242acc;--bd:#fff2}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block}
+#bar{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;right:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;pointer-events:none}
+#bar>*{pointer-events:auto}
+.b,label.b{background:var(--panel);border:1px solid var(--bd);color:var(--fg);padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit;backdrop-filter:blur(6px)}
+.b:hover{border-color:var(--acc)}
+.b.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+select.b{max-width:200px}
+#info{position:absolute;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);background:var(--panel);border:1px solid var(--bd);padding:6px 10px;border-radius:8px;font-size:12px;max-width:80%}
+#drop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;pointer-events:none;opacity:.6;font-size:16px}
+#drop.hide{display:none}
+#rp{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);left:10px;width:min(340px,92vw);max-height:60vh;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:6px;display:none;backdrop-filter:blur(6px)}
+#rp.show{display:block}
+.row{display:flex;gap:6px;align-items:center;padding:4px}
+.row .o{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row small{opacity:.6;display:block}
+#rn{width:150px;cursor:text}
+#gp{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);left:10px;width:min(480px,94vw);max-height:68vh;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px;display:none;backdrop-filter:blur(6px)}
+#gp.show{display:block}
+#gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.card{background:var(--panel);border:1px solid var(--bd);border-radius:8px;padding:6px;cursor:pointer;color:var(--fg);font:inherit;text-align:left}
+.card:hover{border-color:var(--acc)}
+.card .th{height:90px;border-radius:6px;background:#8883;display:flex;align-items:center;justify-content:center;font-size:11px;opacity:.9;overflow:hidden}
+.card .th img{width:100%;height:100%;object-fit:contain}
+.card b{display:block;margin-top:4px;font-size:13px}
+.card small{opacity:.65;font-size:11px;display:block}
+#gn{font-size:11px;opacity:.65;margin-top:8px}
+#tl{display:flex;position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 52px);gap:8px;align-items:center;background:var(--panel);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;backdrop-filter:blur(6px)}
+#tl input[type=range]{flex:1;min-width:80px}
+#tm{font-variant-numeric:tabular-nums;font-size:12px;min-width:92px;text-align:right}
+#st{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);right:10px;width:min(340px,92vw);max-height:62vh;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px;display:none;backdrop-filter:blur(6px)}
+#st.show{display:block}
+#st details{margin-left:12px}#st .lf{margin-left:24px}
+#st .nd{cursor:pointer;font-size:12px;padding:1px 3px;border-radius:4px}
+#st .nd:hover{background:#8883}
+#st h4{margin:10px 4px 4px;font-size:12px;opacity:.7}
+#st .tx{display:flex;gap:8px;align-items:center;font-size:12px;padding:3px 4px}
+#st .tx canvas,#st .tx i{width:40px;height:40px;border-radius:4px;background:#8883;flex:none}
+#st .hint{font-size:11px;opacity:.6;margin:6px 4px}
+#ap{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);left:10px;width:min(340px,92vw);max-height:62vh;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px;display:none;backdrop-filter:blur(6px)}
+#ap.show{display:block}
+#ap .hint2{font-size:11px;opacity:.6;margin:6px 2px 0}
+.card .ad{display:inline-block;margin-top:4px;font-size:11px;color:var(--acc);text-decoration:underline}
+#xp{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);right:10px;width:min(360px,92vw);max-height:66vh;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px;display:none;backdrop-filter:blur(6px)}
+#xp.show{display:block}
+#xp button{display:block;width:100%;text-align:left;margin-bottom:6px}
+#xp small{display:block;opacity:.7;font-size:11px;margin-top:2px}
+#xp .hint{font-size:11px;opacity:.6;margin:4px 2px 0}
+#over{position:absolute;inset:0;border:3px dashed var(--acc);display:none;pointer-events:none}
+
+/* ===== studio layout ===== */
+:root{--chrome:#ececea;--chrome2:#f7f7f5;--muted:#6f6f6f;--vp1:#cfd3d9;--vp2:#eceef1;--ln:#0002}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--chrome:#25262b;--chrome2:#1d1e22;--muted:#9a9ca3;--vp1:#2c2f36;--vp2:#16171b;--ln:#ffffff1a}}
+:root[data-theme="dark"]{--chrome:#25262b;--chrome2:#1d1e22;--muted:#9a9ca3;--vp1:#2c2f36;--vp2:#16171b;--ln:#ffffff1a}
+#app{height:100%;display:grid;grid-template-columns:72px minmax(0,1fr) 330px;grid-template-rows:42px minmax(0,1fr) auto 26px;grid-template-areas:"top top top" "tools vp dock" "tl tl tl" "stat stat stat";background:var(--chrome);color:var(--fg)}
+#top{grid-area:top;display:flex;align-items:center;gap:10px;padding:0 10px;background:var(--chrome2);border-bottom:1px solid var(--ln)}
+#top .brand{font-weight:600;letter-spacing:.2px}
+#top .sp{flex:1}
+#top .hintk{font-size:12px;color:var(--muted)}
+#app .b{border-radius:6px;padding:5px 10px;font-size:13px;background:var(--chrome2);backdrop-filter:none}
+#app .b.primary,#app .b.on{background:var(--acc);border-color:var(--acc);color:#fff}
+#tools{grid-area:tools;display:flex;flex-direction:column;gap:4px;padding:8px 6px;background:var(--chrome2);border-right:1px solid var(--ln);overflow:auto}
+.tool{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border:1px solid transparent;border-radius:8px;background:none;color:var(--fg);font:inherit;font-size:10px;cursor:pointer}
+.tool svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.tool:hover{background:#8882}
+.tool.on{background:var(--acc);color:#fff}
+.tsep{height:1px;background:var(--ln);margin:4px 6px;flex:none}
+#vp{grid-area:vp;position:relative;overflow:hidden;background:linear-gradient(var(--vp1),var(--vp2))}
+#dock{grid-area:dock;display:flex;flex-direction:column;min-height:0;background:var(--chrome);border-left:1px solid var(--ln)}
+#tabs{display:flex;flex:none;background:var(--chrome2);border-bottom:1px solid var(--ln);overflow-x:auto}
+.tab{flex:1;padding:10px 8px;border:0;border-bottom:2px solid transparent;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--fg)}
+.tab.active{color:var(--fg);border-bottom-color:var(--acc);background:var(--chrome)}
+#dbody{flex:1;min-height:0;overflow:auto}
+#dock .pn{position:static;width:auto;max-height:none;border:0;border-radius:0;background:none;padding:10px;display:none;backdrop-filter:none}
+#dock .pn.show{display:block}
+#app #tl{grid-area:tl;display:flex;position:static;align-items:center;gap:8px;flex-wrap:wrap;background:var(--chrome2);border:0;border-top:1px solid var(--ln);border-radius:0;padding:8px 12px;backdrop-filter:none}
+#pp{min-width:70px;background:var(--acc)!important;border-color:var(--acc)!important;color:#fff}
+#rn{width:130px}
+#app #status{grid-area:stat;display:flex;align-items:center;padding:0 10px;background:var(--chrome2);border-top:1px solid var(--ln);font-size:12px;color:var(--muted);min-width:0}
+#app #info{position:static;background:none;border:0;padding:0;max-width:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab.xbtn{flex:none;padding:10px 14px;font-size:14px}
+.tab.xbtn:hover{color:#e5484d}
+#app.nodock{grid-template-columns:72px minmax(0,1fr) 0}
+#app.nodock #dock{display:none}
+@media (max-width:820px){
+ #app.nodock{grid-template-rows:42px auto minmax(0,1fr) 0 auto 26px}
+ #app{grid-template-columns:1fr;grid-template-rows:42px auto minmax(0,1fr) 40vh auto 26px;grid-template-areas:"top" "tools" "vp" "dock" "tl" "stat"}
+ #tools{flex-direction:row;border-right:0;border-bottom:1px solid var(--ln)}
+ .tool{flex:1;min-width:48px}.tsep{width:1px;height:auto;margin:4px 2px}
+ #dock{border-left:0;border-top:1px solid var(--ln)}
+ #top .hintk{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+    <span class="brand">FBX Studio</span>
+    <label class="b primary">Open FBX<input id="f" type="file" multiple accept=".fbx,.png,.jpg,.jpeg,.webp,.bmp,.gif" hidden></label>
+    <span class="sp"></span>
+    <span class="hintk">Drop .fbx to open · Space = play/pause</span>
+    <button class="b on" id="pt" title="Show/hide side panel">Panels</button>
+    <button class="b" id="th" title="Toggle light/dark">◐</button>
+  </header>
+  <nav id="tools">
+    <button class="tool" id="wf" title="Wireframe"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg> Wire</button>
+    <button class="tool on" id="ms" title="Show/hide mesh"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" fill="currentColor" fill-opacity=".3"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg> Mesh</button>
+    <button class="tool on" id="tx" title="Base-color textures on/off"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="3" y="3" width="9" height="9" fill="currentColor" stroke="none"/><rect x="12" y="12" width="9" height="9" fill="currentColor" stroke="none"/></svg> Textures</button>
+    <div class="tsep"></div>
+    <button class="tool" id="bn" title="Skeleton overlay"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="9" r="2"/><circle cx="12" cy="19" r="2.5"/><path d="M8 7.5l8 1M7 8l4 9M17 11l-4 6"/></svg> Bones</button>
+    <button class="tool on" id="gr" title="Ground grid"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg> Grid</button>
+    <div class="tsep"></div>
+    <button class="tool" id="rs" title="Frame the model"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-2.6-5.9"/><path d="M20 4v4h-4"/></svg> Frame</button>
+  </nav>
+  <main id="vp">
+    <canvas id="c"></canvas>
+    <div id="drop">Drop an .fbx file here<br><small>or use “Open FBX”</small></div>
+    <div id="over"></div>
+  </main>
+  <aside id="dock">
+    <div id="tabs">
+      <button class="tab" id="ab">Animations</button>
+      <button class="tab" id="sb">Outliner</button>
+      <button class="tab" id="gl">Samples</button>
+      <button class="tab" id="rc">Recent</button>
+      <button class="tab" id="xb">Export</button>
+      <button class="tab xbtn" id="dx" title="Close panel (Esc)">✕</button>
+    </div>
+    <div id="dbody">
+      <div id="ap" class="pn show"><label class="b" style="display:block;margin-bottom:6px;text-align:center">+ Add animation FBX<input id="af" type="file" multiple accept=".fbx" hidden></label><div id="al"></div><div class="hint2">Works with animations from the same rig (e.g. Mixamo “Without Skin”). You can also drop .fbx files onto this panel. Added clips are saved with the project in Recent.</div></div>
+      <div id="st" class="pn"></div>
+      <div id="gp" class="pn"><div id="gg"></div><div id="gn">Sample files are loaded on demand from the three.js examples repo (MIT). Mixamo models belong to Mixamo/Adobe, use them for testing only. Stanford Bunny: Stanford Computer Graphics Lab.</div></div>
+      <div id="rp" class="pn"></div>
+      <div id="xp" class="pn">
+  <button class="b" data-k="glb">GLB<small>Mesh + skeleton + all animations (Godot, Blender, Unity with glTFast)</small></button>
+  <button class="b" data-k="glb-anim">GLB, animation only<small>Skeleton + animations, no mesh</small></button>
+  <button class="b" data-k="gltf">GLTF<small>Same as GLB as JSON with embedded data</small></button>
+  <button class="b" data-k="obj">OBJ<small>Mesh at the current pose, no materials or textures</small></button>
+  <button class="b" data-k="stl">STL<small>Mesh at the current pose, binary (3D printing)</small></button>
+  <button class="b" data-k="ply">PLY<small>Mesh at the current pose, binary</small></button>
+  <div class="hint">Everything downloads as a .zip because the viewer cannot save .glb or .obj directly. Hidden meshes (Mesh off) are left out of OBJ, STL and PLY.</div>
+</div>
+    </div>
+  </aside>
+  <footer id="tl" style="display:none">
+    <button class="b" id="pp">Pause</button>
+    <select class="b" id="an" title="Clip"></select>
+    <input class="b" id="rn" placeholder="Clip name" title="Rename: type a name, press Enter">
+    <input type="range" id="sc" min="0" max="1000" value="0">
+    <span id="tm">0.00 / 0.00</span>
+    <select class="b" id="sp" title="Speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+    <button class="b on" id="lp">Loop</button>
+  </footer>
+  <div id="status"><span id="info">Ready · open an FBX or pick a sample</span></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/libs/fflate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/GLTFExporter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/OBJExporter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/STLExporter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/exporters/PLYExporter.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('c'),info=$('info');
+const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(45,1,0.01,10000);
+cam.position.set(2,2,4);
+const ctl=new THREE.OrbitControls(cam,cv);ctl.enableDamping=true;
+scene.add(new THREE.HemisphereLight(0xffffff,0x555566,1.0));
+const dl=new THREE.DirectionalLight(0xffffff,1.2);dl.position.set(3,6,4);scene.add(dl);
+let grid=new THREE.GridHelper(10,20,0x888888,0x888888);
+grid.material.opacity=.35;grid.material.transparent=true;scene.add(grid);
+let baseCount=0,skel=null,hl=null,bones=0,texN=0,texOn=true,meshOn=true,modelR=1,texMap={},loopOn=true,scrub=false,curBuf=null,names=[],fname='',obj=null,mixer=null,actions=[],cur=null,paused=false,wire=false;
+const clock=new THREE.Clock();
+
+function resize(){const vp=$('vp'),w=vp.clientWidth||innerWidth,h=vp.clientHeight||innerHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+
+function frame(){
+  if(!obj)return;
+  const box=new THREE.Box3().setFromObject(obj);
+  const size=box.getSize(new THREE.Vector3()),ctr=box.getCenter(new THREE.Vector3());
+  const r=Math.max(size.x,size.y,size.z)||1;
+  ctl.target.copy(ctr);
+  cam.position.copy(ctr).add(new THREE.Vector3(r*.9,r*.6,r*1.6));
+  modelR=r;cam.near=r/1000;cam.far=r*100;cam.updateProjectionMatrix();ctl.update();
+  scene.remove(grid);grid.geometry.dispose();
+  const g=Math.pow(10,Math.ceil(Math.log10(r*2)));
+  grid=new THREE.GridHelper(g,20,0x888888,0x888888);
+  grid.material.opacity=.35;grid.material.transparent=true;
+  grid.position.y=box.min.y;grid.visible=$('gr').classList.contains('on');scene.add(grid);
+}
+
+function load(buf,name,saved,extra){
+  if(obj){scene.remove(obj);obj.traverse(o=>{if(o.geometry)o.geometry.dispose()});obj=null}
+  mixer=null;actions=[];cur=null;fname=name;
+  try{
+    obj=new THREE.FBXLoader(texMgr).parse(buf,'');
+  }catch(e){info.textContent='Failed to parse: '+e.message;return}
+  let tris=0,meshes=0;
+  obj.traverse(o=>{
+    if(o.isMesh){
+      meshes++;
+      const g=o.geometry;tris+=(g.index?g.index.count:g.attributes.position.count)/3;
+      (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.wireframe=wire);
+    }
+  });
+  scene.add(obj);frame();afterLoad();
+  $('drop').classList.add('hide');
+  const sel=$('an');
+  sel.innerHTML='';
+  baseCount=obj.animations.length;
+  if(extra&&extra.length)extra.forEach(x=>{try{const c=THREE.AnimationClip.parse(x.json);c.userData={src:x.src};obj.animations.push(c)}catch(e){}});
+  if(obj.animations&&obj.animations.length){
+    mixer=new THREE.AnimationMixer(obj);mixer.timeScale=+$('sp').value;
+    obj.animations.forEach((c,i)=>{
+      if(saved&&saved[i])c.name=saved[i];
+      actions.push(mixer.clipAction(c));
+      sel.add(new Option(c.name||('Clip '+(i+1)),i));
+    });
+    play(0);showAnim(true);
+  }else showAnim(false);
+  curBuf=buf;saveProj();renderAnimList();
+  info.textContent=`${name} · ${meshes} meshes · ${Math.round(tris).toLocaleString()} tris · ${actions.length} anim · ${bones} bones · ${texN} tex`;
+}
+function showAnim(on){['an','pp','rn','tl'].forEach(id=>$(id).style.display=on?'':'none')}
+function play(i){
+  $('an').value=i;$('rn').value=obj.animations[i].name;
+  if(cur)cur.stop();
+  cur=actions[i];cur.setLoop(loopOn?THREE.LoopRepeat:THREE.LoopOnce,Infinity);cur.clampWhenFinished=true;cur.reset().play();paused=false;$('pp').textContent='Pause';if($('ap').classList.contains('show'))renderAnimList();
+}
+function readFile(file){
+  if(!file)return;
+  if(!/\.fbx$/i.test(file.name)){info.textContent='Not an .fbx file';return}
+  info.textContent='Loading…';
+  const fr=new FileReader();
+  fr.onload=async()=>{let rec=null;try{rec=await st('readonly',s=>s.get(file.name+'|'+fr.result.byteLength))}catch(e){}load(fr.result,file.name,rec&&rec.names,rec&&rec.extra)};
+  fr.onerror=()=>info.textContent='Read error';
+  fr.readAsArrayBuffer(file);
+}
+
+$('f').onchange=e=>{readFiles(e.target.files);e.target.value=''};
+$('wf').onclick=e=>{
+  wire=!wire;e.currentTarget.classList.toggle('on',wire);
+  if(obj)obj.traverse(o=>{if(o.isMesh)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.wireframe=wire)});
+};
+$('gr').classList.add('on');
+$('gr').onclick=e=>{const on=e.currentTarget.classList.toggle('on');grid.visible=on};
+$('rs').onclick=frame;
+const toBytes=r=>typeof r==='string'?new TextEncoder().encode(r):(r&&r.buffer&&r.byteLength!==undefined&&!(r instanceof ArrayBuffer))?new Uint8Array(r.buffer,r.byteOffset,r.byteLength):new Uint8Array(r);
+function bakedScene(){
+  obj.updateMatrixWorld(true);
+  const g=new THREE.Group(),mat=new THREE.MeshBasicMaterial(),v=new THREE.Vector3();
+  obj.traverse(o=>{
+    if(!o.isMesh||!o.visible||!o.geometry.attributes.position)return;
+    const geo=o.geometry.clone(),pos=geo.attributes.position;
+    if(o.isSkinnedMesh){
+      o.skeleton.update();
+      for(let i=0;i<pos.count;i++){o.boneTransform(i,v);pos.setXYZ(i,v.x,v.y,v.z)}
+    }
+    geo.applyMatrix4(o.matrixWorld);
+    ['skinIndex','skinWeight'].forEach(k=>geo.deleteAttribute(k));
+    geo.computeVertexNormals();
+    const m=new THREE.Mesh(geo,mat);m.name=o.name;g.add(m);
+  });
+  return g;
+}
+const STANDALONE=!(window.claude&&window.claude.use);
+async function getDl(){
+  if(!STANDALONE)return claude.use('downloads');
+  return{save:async({filename,data})=>{
+    const u=URL.createObjectURL(new Blob([data])),a=document.createElement('a');
+    a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),4000);return{status:'saved'};
+  }};
+}
+async function doExport(kind){
+  if(!obj){info.textContent='Load a model first';return}
+  const dl=await getDl();
+  if(!dl){info.textContent='Download not available here';return}
+  const base=fname.replace(/\.fbx$/i,'');
+  const finish=async(bytes,ext,suf)=>{
+    try{
+      const fn=STANDALONE?base+suf+ext:base+suf+'.zip';
+      await dl.save({filename:fn,data:STANDALONE?bytes:fflate.zipSync({[base+suf+ext]:bytes})});
+      info.textContent='Saved '+fn;$('xp').classList.remove('show');
+    }catch(e){info.textContent='Save cancelled/failed: '+(e.code||e.message)}
+  };
+  if(kind==='glb'||kind==='gltf'||kind==='glb-anim'){
+    const strip=kind==='glb-anim';
+    if(strip&&!obj.animations.length){info.textContent='No animations to export';return}
+    const ms=[];if(strip)obj.traverse(o=>{if(o.isMesh)ms.push([o,o.parent])});
+    ms.forEach(([m,p])=>p.remove(m));
+    const restore=()=>ms.forEach(([m,p])=>p.add(m));
+    new THREE.GLTFExporter().parse(obj,res=>{
+      restore();
+      if(kind==='gltf')finish(new TextEncoder().encode(JSON.stringify(res)),'.gltf','_model');
+      else finish(new Uint8Array(res),'.glb',strip?'_anim':'_model');
+    },e=>{restore();info.textContent='Export failed'},{binary:kind!=='gltf',animations:obj.animations});
+    return;
+  }
+  const g=bakedScene();
+  try{
+    if(!g.children.length){info.textContent='No visible mesh to export';return}
+    let r;
+    if(kind==='obj')r=new THREE.OBJExporter().parse(g);
+    else if(kind==='stl')r=new THREE.STLExporter().parse(g,{binary:true});
+    else r=new THREE.PLYExporter().parse(g,undefined,{binary:true});
+    if(!r){info.textContent='Nothing to export';return}
+    await finish(toBytes(r),'.'+kind,'_pose');
+  }catch(e){info.textContent='Export failed: '+e.message}
+  finally{g.children.forEach(m=>m.geometry.dispose())}
+}
+document.querySelectorAll('#xp [data-k]').forEach(b=>b.onclick=()=>doExport(b.dataset.k));
+$('xb').onclick=()=>{
+  const b=$('xp');b.classList.toggle('show');
+  ['gp','rp','ap','st'].forEach(i=>$(i).classList.remove('show'));
+};
+$('rn').onchange=e=>{
+  const i=+$('an').value,v=e.target.value.trim();
+  if(!obj||!v)return;
+  obj.animations[i].name=v;$('an').options[i].text=v;saveProj();renderAnimList();
+};
+
+/* recent projects (IndexedDB, this browser only) */
+let dbp=null;
+function idb(){return dbp||(dbp=new Promise((res,rej)=>{try{const r=indexedDB.open('fbxv',1);r.onupgradeneeded=()=>r.result.createObjectStore('p',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}))}
+async function st(mode,fn){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('p',mode);const q=fn(t.objectStore('p'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}
+async function saveProj(){
+  if(!curBuf||!obj)return;
+  try{
+    const sn=snap();await st('readwrite',s=>s.put({id:fname+'|'+curBuf.byteLength,name:fname,buf:curBuf,names:sn.names,extra:sn.extra,date:Date.now()}));
+    const all=(await st('readonly',s=>s.getAll())).sort((a,b)=>b.date-a.date);
+    for(const r of all.slice(8))await st('readwrite',s=>s.delete(r.id));
+    if($('rp').classList.contains('show'))renderRecent();
+  }catch(e){info.title='Recent not saved: '+(e&&e.name)}
+}
+async function renderRecent(){
+  const box=$('rp');box.textContent='';
+  let all=[];try{all=(await st('readonly',s=>s.getAll())).sort((a,b)=>b.date-a.date)}catch(e){}
+  if(!all.length){box.textContent='No recent projects yet.';return}
+  all.forEach(r=>{
+    const row=document.createElement('div');row.className='row';
+    const o=document.createElement('button');o.className='b o';
+    o.textContent=r.name;
+    const sm=document.createElement('small');
+    sm.textContent=(r.buf.byteLength/1048576).toFixed(1)+' MB · '+new Date(r.date).toLocaleString()+(r.names.length?' · '+r.names.length+' clip':'');
+    o.appendChild(sm);
+    o.onclick=()=>{texMap={};box.classList.remove('show');fname=r.name;load(r.buf,r.name,r.names,r.extra)};
+    const x=document.createElement('button');x.className='b';x.textContent='✕';x.title='Remove';
+    x.onclick=async()=>{try{await st('readwrite',s=>s.delete(r.id))}catch(e){}renderRecent()};
+    row.append(o,x);box.appendChild(row);
+  });
+}
+$('rc').onclick=()=>{const b=$('rp');$('gp').classList.remove('show');$('st').classList.remove('show');$('ap').classList.remove('show');$('xp').classList.remove('show');b.classList.toggle('show');if(b.classList.contains('show'))renderRecent()};
+$('an').onchange=e=>play(+e.target.value);
+function togglePlay(){
+  if(!cur)return;
+  const d=cur.getClip().duration;
+  if(!loopOn&&cur.time>=d-1e-3){cur.reset().play();paused=false}
+  else{paused=!paused;cur.paused=paused}
+}
+$('pp').onclick=togglePlay;
+$('lp').onclick=e=>{
+  loopOn=!loopOn;e.currentTarget.classList.toggle('on',loopOn);
+  if(cur){cur.setLoop(loopOn?THREE.LoopRepeat:THREE.LoopOnce,Infinity);cur.clampWhenFinished=true}
+};
+$('sp').onchange=e=>{if(mixer)mixer.timeScale=+e.target.value};
+$('sc').addEventListener('pointerdown',()=>scrub=true);
+addEventListener('pointerup',()=>scrub=false);
+$('sc').oninput=e=>{
+  if(!cur||!mixer)return;
+  const d=cur.getClip().duration;
+  cur.time=e.target.value/1000*d;mixer.update(0);
+};
+addEventListener('keydown',e=>{
+  if(e.code==='Space'&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();togglePlay()}
+});
+
+['dragenter','dragover'].forEach(t=>addEventListener(t,e=>{e.preventDefault();$('over').style.display='block'}));
+['dragleave','drop'].forEach(t=>addEventListener(t,e=>{e.preventDefault();$('over').style.display='none'}));
+addEventListener('drop',e=>readFiles(e.dataTransfer.files));
+
+
+/* bones / structure / textures */
+const texMgr=new THREE.LoadingManager();
+texMgr.setURLModifier(u=>{let k=u.split(/[\\/]/).pop().split('?')[0];try{k=decodeURIComponent(k)}catch(e){}return texMap[k.toLowerCase()]||u});
+const mats=o=>Array.isArray(o.material)?o.material:[o.material];
+const SLOTS=['map','normalMap','bumpMap','specularMap','emissiveMap','alphaMap','aoMap','displacementMap','lightMap'];
+function getTex(m,k){return m[k]||(k==='map'?m.userData._map:null)||null}
+function allTex(){
+  const out=[],seen=new Set();
+  if(!obj)return out;
+  obj.traverse(o=>{if(o.isMesh)mats(o).forEach(m=>SLOTS.forEach(k=>{const t=getTex(m,k);if(t&&!seen.has(t.uuid)){seen.add(t.uuid);out.push({k,m,t})}}))});
+  return out;
+}
+function applyTex(){
+  if(!obj)return;
+  obj.traverse(o=>{if(o.isMesh)mats(o).forEach(m=>{
+    if(texOn){if(m.userData._map){m.map=m.userData._map;delete m.userData._map;m.needsUpdate=true}}
+    else if(m.map){m.userData._map=m.map;m.map=null;m.needsUpdate=true}
+  })});
+}
+function applyMesh(){if(obj)obj.traverse(o=>{if(o.isMesh)o.visible=meshOn})}
+function clearHl(){if(hl){scene.remove(hl.h);if(hl.h.geometry)hl.h.geometry.dispose();hl=null}}
+function afterLoad(){
+  clearHl();
+  if(skel){scene.remove(skel);skel.geometry.dispose();skel=null}
+  bones=0;obj.traverse(o=>{if(o.isBone)bones++});
+  if(bones){
+    skel=new THREE.SkeletonHelper(obj);
+    skel.material.depthTest=false;skel.material.transparent=true;skel.renderOrder=998;
+    skel.visible=$('bn').classList.contains('on');scene.add(skel);
+  }
+  texN=allTex().length;
+  applyTex();applyMesh();
+  if($('st').classList.contains('show'))buildTree();
+}
+function highlight(o){
+  clearHl();
+  let h;
+  if(o.isBone||(!o.isMesh&&!o.children.length)){
+    h=new THREE.Mesh(new THREE.SphereGeometry(modelR*0.02,12,8),new THREE.MeshBasicMaterial({color:0xffcc00,depthTest:false}));
+    o.getWorldPosition(h.position);
+  }else{h=new THREE.BoxHelper(o,0xffcc00);h.material.depthTest=false}
+  h.renderOrder=999;scene.add(h);hl={o,h};
+}
+function buildTree(){
+  const box=$('st');box.textContent='';
+  if(!obj){box.textContent='Load a file first.';return}
+  const mk=(o,depth)=>{
+    const lb=document.createElement('span');lb.className='nd';
+    const ic=o.isBone?'🦴':o.isMesh?'▦':o.isCamera?'📷':o.isLight?'💡':'○';
+    lb.textContent=ic+' '+(o.name||o.type);
+    lb.title=o.type+(o.isMesh?' · '+Math.round((o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3)+' tris':'');
+    lb.onclick=e=>{e.preventDefault();e.stopPropagation();highlight(o)};
+    if(!o.children.length){const d=document.createElement('div');d.className='lf';d.appendChild(lb);return d}
+    const dt=document.createElement('details');if(depth<2)dt.open=true;
+    const sm=document.createElement('summary');sm.appendChild(lb);dt.appendChild(sm);
+    o.children.forEach(k=>dt.appendChild(mk(k,depth+1)));
+    return dt;
+  };
+  const h1=document.createElement('h4');h1.textContent='Hierarchy · '+bones+' bones (click a name to highlight)';
+  box.append(h1,mk(obj,0));
+  const tx=allTex();
+  const h2=document.createElement('h4');h2.textContent='Textures ('+tx.length+')';box.appendChild(h2);
+  tx.forEach(({k,m,t})=>{
+    const im=t.image,ok=im&&(im.width||im.naturalWidth);
+    const row=document.createElement('div');row.className='tx';
+    let th;
+    if(ok){th=document.createElement('canvas');th.width=th.height=40;try{th.getContext('2d').drawImage(im,0,0,40,40)}catch(e){}}
+    else{th=document.createElement('i')}
+    const tt=document.createElement('span');
+    tt.textContent=(t.name||m.name||'texture')+' · '+k+' · '+(ok?im.width||im.naturalWidth:'')+(ok?' px':'missing');
+    row.append(th,tt);box.appendChild(row);
+  });
+  const hint=document.createElement('div');hint.className='hint';
+  hint.textContent='Missing textures: select or drop the image files (png/jpg/webp) together with the FBX, or after loading it.';
+  box.appendChild(hint);
+}
+$('bn').onclick=e=>{
+  if(!skel){info.textContent=obj?'No bones in this file':'Load a file first';return}
+  skel.visible=e.currentTarget.classList.toggle('on');
+};
+$('ms').onclick=e=>{meshOn=e.currentTarget.classList.toggle('on');applyMesh()};
+$('tx').onclick=e=>{texOn=e.currentTarget.classList.toggle('on');applyTex()};
+$('sb').onclick=()=>{
+  const b=$('st');b.classList.toggle('show');
+  ['gp','rp','ap','xp'].forEach(i=>$(i).classList.remove('show'));
+  if(b.classList.contains('show'))buildTree();
+};
+function readFiles(list){
+  const fl=[...list];
+  const fbx=fl.find(f=>/\.fbx$/i.test(f.name));
+  const imgs=fl.filter(f=>/\.(png|jpe?g|webp|bmp|gif)$/i.test(f.name));
+  if(fbx)texMap={};
+  imgs.forEach(f=>{texMap[f.name.toLowerCase()]=URL.createObjectURL(f)});
+  if(fbx)readFile(fbx);
+  else if(imgs.length&&curBuf){info.textContent='Applying textures…';const sn=snap();load(curBuf,fname,sn.names,sn.extra)}
+  else info.textContent='Drop an .fbx file (plus optional png/jpg textures)';
+}
+
+/* animation list */
+function snap(){return{names:obj.animations.map(c=>c.name),extra:obj.animations.slice(baseCount).map(c=>({src:(c.userData&&c.userData.src)||'',json:THREE.AnimationClip.toJSON(c)}))}}
+function syncSel(){const sel=$('an');sel.innerHTML='';obj.animations.forEach((c,i)=>sel.add(new Option(c.name||('Clip '+(i+1)),i)))}
+function renderAnimList(){
+  const box=$('al');box.textContent='';
+  if(!obj){box.textContent='Load a model first.';return}
+  if(!obj.animations.length){box.textContent='No animations yet. Add an animation FBX above.';return}
+  obj.animations.forEach((c,i)=>{
+    const row=document.createElement('div');row.className='row';
+    const o=document.createElement('button');o.className='b o'+(actions[i]&&actions[i]===cur?' on':'');
+    o.textContent=c.name;
+    const sm=document.createElement('small');
+    sm.textContent=c.duration.toFixed(2)+'s · '+(i<baseCount?'in model':((c.userData&&c.userData.src)||'added'));
+    o.appendChild(sm);o.onclick=()=>play(i);row.appendChild(o);
+    if(i>=baseCount){
+      const x=document.createElement('button');x.className='b';x.textContent='✕';x.title='Remove from list';
+      x.onclick=()=>removeClip(i);row.appendChild(x);
+    }
+    box.appendChild(row);
+  });
+}
+function removeClip(i){
+  if(i<baseCount||!obj.animations[i])return;
+  const clip=obj.animations[i],act=actions[i];
+  act.stop();mixer.uncacheAction(clip);mixer.uncacheClip(clip);
+  obj.animations.splice(i,1);actions.splice(i,1);syncSel();
+  if(cur===act){
+    cur=null;
+    if(obj.animations.length)play(Math.min(i,obj.animations.length-1));else showAnim(false);
+  }else if(cur)$('an').value=actions.indexOf(cur);
+  saveProj();renderAnimList();
+}
+function addFromBuf(buf,label){
+  let src;
+  try{src=new THREE.FBXLoader(texMgr).parse(buf,'')}catch(e){return{n:0,msg:'could not parse'}}
+  if(!src.animations.length)return{n:0,msg:'no animation inside'};
+  const nodes=new Set();obj.traverse(o=>nodes.add(o.name));
+  const base=label.replace(/\.fbx$/i,'').replace(/_/g,' ');
+  let n=0,msg='';
+  src.animations.forEach((c,k)=>{
+    const tr=c.tracks.length||1;
+    const ok=c.tracks.filter(t=>nodes.has(THREE.PropertyBinding.parseTrackName(t.name).nodeName)).length;
+    if(!ok){msg='no matching bones (different rig?)';return}
+    if(ok<tr*0.5)msg=Math.round(ok/tr*100)+'% of tracks match this skeleton';
+    const clip=c.clone();
+    const nm=(!c.name||/^(mixamo\.com|take 001|default take|animstack.*)$/i.test(c.name))?base+(src.animations.length>1?' '+(k+1):''):c.name;
+    let u=nm,q=2;while(obj.animations.some(a=>a.name===u))u=nm+' ('+(q++)+')';
+    clip.name=u;clip.userData={src:label};obj.animations.push(clip);n++;
+  });
+  return{n,msg};
+}
+function afterAdd(added,msgs){
+  if(added){
+    if(!mixer){mixer=new THREE.AnimationMixer(obj);mixer.timeScale=+$('sp').value;actions=[]}
+    for(let i=actions.length;i<obj.animations.length;i++)actions.push(mixer.clipAction(obj.animations[i]));
+    syncSel();showAnim(true);play(obj.animations.length-1);saveProj();
+  }
+  renderAnimList();
+  info.textContent=(added?'Added '+added+' animation'+(added>1?'s':''):'Nothing added')+(msgs.length?' · '+msgs.join('; '):'');
+}
+async function addAnims(files){
+  if(!obj){info.textContent='Load a model first';return}
+  let added=0;const msgs=[];
+  for(const f of [...files]){
+    if(!/\.fbx$/i.test(f.name))continue;
+    const r=addFromBuf(await f.arrayBuffer(),f.name);
+    added+=r.n;if(r.msg)msgs.push(f.name+': '+r.msg);
+  }
+  afterAdd(added,msgs);
+}
+$('ab').onclick=()=>{
+  const b=$('ap');b.classList.toggle('show');
+  ['gp','rp','st','xp'].forEach(i=>$(i).classList.remove('show'));
+  if(b.classList.contains('show'))renderAnimList();
+};
+$('af').onchange=e=>{addAnims(e.target.files);e.target.value=''};
+$('ap').addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();$('over').style.display='none';addAnims(e.dataTransfer.files)});
+
+/* sample gallery */
+const SAMPLES=[
+ {
+  "file": "Samba_Dancing.fbx",
+  "title": "Samba Dancing",
+  "desc": "Mixamo character with a dance clip. Good for testing rename and save.",
+  "kb": 3595,
+  "url": "https://raw.githubusercontent.com/mrdoob/three.js/r170/examples/models/fbx/Samba%20Dancing.fbx"
+ },
+ {
+  "file": "mixamo.fbx",
+  "title": "Mixamo character",
+  "desc": "Skinned Mixamo character.",
+  "kb": 3008,
+  "url": "https://raw.githubusercontent.com/mrdoob/three.js/r170/examples/models/fbx/mixamo.fbx"
+ },
+ {
+  "file": "stanford-bunny.fbx",
+  "title": "Stanford Bunny",
+  "desc": "Static scanned mesh, no animation.",
+  "kb": 7878,
+  "url": "https://raw.githubusercontent.com/mrdoob/three.js/r170/examples/models/fbx/stanford-bunny.fbx"
+ },
+ {
+  "file": "nurbs.fbx",
+  "title": "NURBS test",
+  "desc": "Tiny NURBS surface (4 KB).",
+  "kb": 4,
+  "url": "https://raw.githubusercontent.com/mrdoob/three.js/r170/examples/models/fbx/nurbs.fbx"
+ }
+];
+async function sampleBuf(x){
+  if(x.b64){const bin=atob(x.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return fflate.gunzipSync(u).slice().buffer}
+  const r=await fetch(x.url);if(!r.ok)throw new Error('HTTP '+r.status);return await r.arrayBuffer();
+}
+function buildGallery(){
+  const g=$('gg');
+  SAMPLES.forEach((x,i)=>{
+    const c=document.createElement('button');c.className='card';
+    c.innerHTML='<div class="th">loading…</div><b></b><small></small>';
+    c.querySelector('b').textContent=x.title;
+    c.querySelector('small').textContent=x.desc+' · '+(x.kb>1024?(x.kb/1024).toFixed(1)+' MB':x.kb+' KB');
+    c.onclick=()=>{texMap={};$('gp').classList.remove('show');info.textContent='Loading…';setTimeout(async()=>{try{load(await sampleBuf(x),x.file)}catch(e){info.textContent='Could not load sample: '+e.message}},30)};
+    if(i<2){
+      const a=document.createElement('span');a.className='ad';a.textContent='+ add as animation';
+      a.onclick=async ev=>{
+        ev.stopPropagation();
+        if(!obj){info.textContent='Load a model first';return}
+        let r;try{r=addFromBuf(await sampleBuf(x),x.title)}catch(e){info.textContent='Could not load sample';return}
+        afterAdd(r.n,r.msg?[x.title+': '+r.msg]:[]);$('gp').classList.remove('show');
+      };
+      c.appendChild(a);
+    }
+    x.el=c.querySelector('.th');g.appendChild(c);
+  });
+}
+let thumbsDone=false;
+async function makeThumbs(){
+  if(thumbsDone)return;thumbsDone=true;
+  const W=240,H=150;
+  const r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});r.setSize(W,H);
+  const sc=new THREE.Scene();
+  sc.add(new THREE.HemisphereLight(0xffffff,0x555566,1.1));
+  const d=new THREE.DirectionalLight(0xffffff,1.2);d.position.set(3,6,4);sc.add(d);
+  const cm=new THREE.PerspectiveCamera(45,W/H,.01,1e6);
+  for(const x of SAMPLES){
+    await new Promise(k=>setTimeout(k,40));
+    if(!x.b64){x.el.textContent='Click to load';continue}
+    try{
+      const o=new THREE.FBXLoader().parse(await sampleBuf(x),'');sc.add(o);
+      const b=new THREE.Box3().setFromObject(o),sz=b.getSize(new THREE.Vector3()),ct=b.getCenter(new THREE.Vector3());
+      const m=Math.max(sz.x,sz.y,sz.z)||1;
+      cm.near=m/1000;cm.far=m*100;cm.updateProjectionMatrix();
+      cm.position.copy(ct).add(new THREE.Vector3(m*.8,m*.5,m*1.5));cm.lookAt(ct);
+      r.render(sc,cm);
+      const img=new Image();img.src=r.domElement.toDataURL();
+      x.el.textContent='';x.el.appendChild(img);
+      sc.remove(o);o.traverse(q=>{if(q.geometry)q.geometry.dispose()});
+    }catch(e){x.el.textContent='no preview'}
+  }
+  r.dispose();
+}
+buildGallery();
+$('gl').onclick=()=>{const b=$('gp');b.classList.toggle('show');$('rp').classList.remove('show');$('st').classList.remove('show');$('ap').classList.remove('show');$('xp').classList.remove('show');if(b.classList.contains('show'))makeThumbs()};
+
+/* studio glue */
+(function(){
+  const map={ab:'ap',sb:'st',gl:'gp',rc:'rp',xb:'xp'};
+  const keys=Object.keys(map);
+  const sync=()=>{
+    if(!keys.some(k=>$(map[k]).classList.contains('show'))){$('ap').classList.add('show');return}
+    keys.forEach(k=>$(k).classList.toggle('active',$(map[k]).classList.contains('show')));
+  };
+  keys.forEach(k=>{
+    $(k).addEventListener('click',e=>{if($(map[k]).classList.contains('show'))e.stopImmediatePropagation()},true);
+    new MutationObserver(sync).observe($(map[k]),{attributes:true,attributeFilter:['class']});
+  });
+  sync();renderAnimList();
+  new ResizeObserver(resize).observe($('vp'));
+  $('th').onclick=()=>{
+    const r=document.documentElement;
+    const dark=getComputedStyle(r).getPropertyValue('--bg').trim()==='#16171a';
+    r.dataset.theme=dark?'light':'dark';
+  };
+})();
+
+(function(){
+  const app=$('app'),pt=$('pt');
+  const setDock=open=>{app.classList.toggle('nodock',!open);pt.classList.toggle('on',open);resize()};
+  $('dx').onclick=()=>setDock(false);
+  pt.onclick=()=>setDock(app.classList.contains('nodock'));
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&!app.classList.contains('nodock'))setDock(false)});
+})();
+if(STANDALONE){const h=document.querySelector('#xp .hint');if(h)h.textContent='Files download directly as .glb / .gltf / .obj / .stl / .ply. Hidden meshes (Mesh off) are left out of OBJ, STL and PLY.'}
+(function loop(){
+  requestAnimationFrame(loop);
+  if(mixer)mixer.update(clock.getDelta());else clock.getDelta();
+  if(cur){
+    const d=cur.getClip().duration,t=Math.min(cur.time%(d+1e-9)||(cur.time>=d?d:0),d),fin=!loopOn&&cur.time>=d-1e-3;
+    if(!scrub)$('sc').value=d?Math.round(t/d*1000):0;
+    $('tm').textContent=t.toFixed(2)+' / '+d.toFixed(2)+'s';
+    $('pp').textContent=(paused||fin)?'Play':'Pause';
+  }
+  if(hl){if(hl.h.type==='BoxHelper')hl.h.update();else hl.o.getWorldPosition(hl.h.position)}
+  ctl.update();renderer.render(scene,cam);
+})();
+</script>
+</body>
+</html>
