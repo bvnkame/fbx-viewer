@@ -55,6 +55,23 @@ select.b{max-width:200px}
 #ap{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);left:10px;width:min(340px,92vw);max-height:62vh;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px;display:none;backdrop-filter:blur(6px)}
 #ap.show{display:block}
 #ap .hint2{font-size:11px;opacity:.6;margin:6px 2px 0}
+.clip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center;padding:6px;margin-bottom:4px;border:1px solid var(--ln);border-radius:8px}
+.clip.on{border-color:var(--acc);box-shadow:inset 3px 0 0 var(--acc)}
+.clip input{width:100%;min-width:0;background:transparent;border:1px solid transparent;border-radius:5px;color:inherit;font:inherit;font-size:13px;padding:3px 5px}
+.clip input:hover{border-color:var(--ln)}
+.clip input:focus{outline:none;border-color:var(--acc);background:var(--chrome2)}
+.clip .meta{grid-column:2/4;font-size:11px;color:var(--muted);padding:0 5px;display:flex;gap:6px;flex-wrap:wrap}
+.clip .tag{border:1px solid var(--ln);border-radius:4px;padding:0 4px}
+.clip .tag.add{color:var(--acc);border-color:var(--acc)}
+#app .clip .b{padding:3px 8px}
+.bl{margin-top:10px;padding-top:8px;border-top:1px solid var(--ln)}
+.blh{font-size:12px;font-weight:600;margin-bottom:6px}
+.blg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.blg label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted)}
+.blg label#bwl,.blg label#bfl{grid-column:1/3}
+.blg select.b,.blg input.b{max-width:none;width:100%}
+.blb{display:flex;gap:6px;margin-top:8px}
+.blb .b{flex:1}
 .card .ad{display:inline-block;margin-top:4px;font-size:11px;color:var(--acc);text-decoration:underline}
 #xp{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);right:10px;width:min(360px,92vw);max-height:66vh;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px;display:none;backdrop-filter:blur(6px)}
 #xp.show{display:block}
@@ -145,12 +162,26 @@ select.b{max-width:200px}
       <button class="tab xbtn" id="dx" title="Close panel (Esc)">✕</button>
     </div>
     <div id="dbody">
-      <div id="ap" class="pn show"><label class="b" style="display:block;margin-bottom:6px;text-align:center">+ Add animation FBX<input id="af" type="file" multiple accept=".fbx" hidden></label><div id="al"></div><div class="hint2">Works with animations from the same rig (e.g. Mixamo “Without Skin”). You can also drop .fbx files onto this panel. Added clips are saved with the project in Recent.</div></div>
+      <div id="ap" class="pn show"><label class="b" style="display:block;margin-bottom:6px;text-align:center">+ Add animation FBX<input id="af" type="file" multiple accept=".fbx" hidden></label><div id="al"></div>
+        <div class="bl">
+          <div class="blh">Blend two clips</div>
+          <div class="blg">
+            <label>A<select class="b" id="ba"></select></label>
+            <label>B<select class="b" id="bb"></select></label>
+            <label>Mode<select class="b" id="bm"><option value="mix">Mix (weight)</option><option value="xf">Crossfade A → B</option></select></label>
+            <label id="bwl">Weight of B <b id="bwv">50%</b><input type="range" id="bw" min="0" max="100" value="50"></label>
+            <label id="bfl" style="display:none">Fade (s)<input class="b" type="number" id="bf" min="0.05" step="0.05" value="0.4"></label>
+          </div>
+          <div class="blb"><button class="b" id="bpv">Preview</button><button class="b primary" id="bk">Bake as new clip</button></div>
+          <div class="hint2">Baked clips are saved in FBX and GLB. The Godot export also turns each blend into an AnimationTree node.</div>
+        </div>
+        <div class="hint2">Works with animations from the same rig (e.g. Mixamo “Without Skin”). You can also drop .fbx files onto this panel. Added clips are saved with the project in Recent.</div></div>
       <div id="st" class="pn"></div>
       <div id="gp" class="pn"><div id="gg"></div><div id="gn">Sample files are loaded on demand from the three.js examples repo (MIT). Mixamo models belong to Mixamo/Adobe, use them for testing only. Stanford Bunny: Stanford Computer Graphics Lab.</div></div>
       <div id="rp" class="pn"></div>
       <div id="xp" class="pn">
   <button class="b" data-k="fbx">FBX<small>Original file + renamed clips + added animations</small><small id="fbxs" class="spec"></small></button>
+  <button class="b" data-k="godot">Godot 4<small>GLB + .tscn with AnimationTree (state machine, blends as BlendSpace1D / crossfade transitions)</small><small id="gds" class="spec"></small></button>
   <button class="b" data-k="glb">GLB<small>Mesh + skeleton + all animations (Godot, Blender, Unity with glTFast)</small></button>
   <button class="b" data-k="glb-anim">GLB, animation only<small>Skeleton + animations, no mesh</small></button>
   <button class="b" data-k="gltf">GLTF<small>Same as GLB as JSON with embedded data</small></button>
@@ -234,7 +265,7 @@ function load(buf,name,saved,extra){
   const sel=$('an');
   sel.innerHTML='';
   baseCount=obj.animations.length;
-  if(extra&&extra.length)extra.forEach(x=>{try{const c=THREE.AnimationClip.parse(x.json);c.userData={src:x.src};obj.animations.push(c)}catch(e){}});
+  if(extra&&extra.length)extra.forEach(x=>{try{const c=THREE.AnimationClip.parse(x.json);c.userData={src:x.src,blend:x.blend};obj.animations.push(c)}catch(e){}});
   if(obj.animations&&obj.animations.length){
     mixer=new THREE.AnimationMixer(obj);mixer.timeScale=+$('sp').value;
     obj.animations.forEach((c,i)=>{
@@ -251,7 +282,7 @@ function load(buf,name,saved,extra){
 function showAnim(on){['an','pp','rn','tl'].forEach(id=>$(id).style.display=on?'':'none')}
 function play(i){
   $('an').value=i;$('rn').value=obj.animations[i].name;
-  if(cur)cur.stop();
+  if(cur)cur.stop();stopPreview();
   cur=actions[i];cur.setLoop(loopOn?THREE.LoopRepeat:THREE.LoopOnce,Infinity);cur.clampWhenFinished=true;cur.reset().play();paused=false;$('pp').textContent='Pause';if($('ap').classList.contains('show'))renderAnimList();
 }
 function readFile(file){
@@ -311,6 +342,21 @@ async function doExport(kind){
       info.textContent='Saved '+fn;$('xp').classList.remove('show');
     }catch(e){info.textContent='Save cancelled/failed: '+(e.code||e.message)}
   };
+  if(kind==='godot'){
+    const names=godotNames(),old=obj.animations.map(c=>c.name),gname=base.replace(/[^\w-]+/g,'_')+'.glb';
+    let tscn;try{tscn=godotScene(gname,names)}catch(e){info.textContent='Godot export failed: '+e.message;return}
+    obj.animations.forEach((c,i)=>c.name=names[i]);
+    new THREE.GLTFExporter().parse(obj,async res=>{
+      obj.animations.forEach((c,i)=>c.name=old[i]);
+      const readme=`Copy both files into the same folder of your Godot 4.2+ project, then open ${gname.replace(/\.glb$/,'.tscn')}.\nThe AnimationTree uses the AnimationPlayer imported from the GLB.\nTip: enable Loop for clips in the GLB import dialog (Animation tab) if they should repeat.\n`;
+      const fn=base+'_godot.zip';
+      try{
+        await dl.save({filename:fn,data:fflate.zipSync({[gname]:new Uint8Array(res),[gname.replace(/\.glb$/,'.tscn')]:new TextEncoder().encode(tscn),'README.txt':new TextEncoder().encode(readme)})});
+        info.textContent='Saved '+fn+' · '+godotSpec();$('xp').classList.remove('show');
+      }catch(e){info.textContent='Save cancelled/failed: '+(e.code||e.message)}
+    },e=>{obj.animations.forEach((c,i)=>c.name=old[i]);info.textContent='Godot export failed'},{binary:true,animations:obj.animations});
+    return;
+  }
   if(kind==='fbx'){
     try{
       const r=fbxSave(curBuf);
@@ -500,17 +546,58 @@ function fbxSpec(){
   return `FBX ${(v/1000).toFixed(1)} binary · original mesh, skin, materials kept · ${obj.animations.length} clip${obj.animations.length===1?'':'s'} (${baseCount} in model${ren?', '+ren+' renamed':''}, ${add} added)`+
     (obj.animations.length?' · '+obj.animations.map(c=>c.name+' '+c.duration.toFixed(1)+'s').join(', '):'');
 }
+/* Godot 4: GLB + scene with an AnimationTree (state machine of all clips, blends as BlendSpace1D / crossfade transitions) */
+function godotNames(){
+  const used=new Set();
+  return obj.animations.map(c=>{let b=(c.name||'Clip').replace(/[\s\/\\:,\[\]".@%^*|<>?]+/g,'_').trim()||'Clip',u=b,q=2;while(used.has(u))u=b+'_'+(q++);used.add(u);return u});
+}
+function godotScene(glbName,names){
+  const res=[],sub=(type,body)=>{const id=type+'_'+res.length;res.push(`[sub_resource type="${type}" id="${id}"]\n${body}`);return id};
+  const q=v=>JSON.stringify(v),anim=n=>sub('AnimationNodeAnimation',`animation = &${q(n)}\n`);
+  const byName=new Map(obj.animations.map((c,i)=>[c.name,names[i]]));
+  const states=[],trans=[],params=[];
+  // plain clips (baked blends are left out: the tree builds the blend live instead)
+  obj.animations.forEach((c,i)=>{if(!(c.userData&&c.userData.blend)&&c.duration>0&&c.tracks.length)states.push({n:names[i],id:anim(names[i])})});
+  const xf=[];
+  obj.animations.forEach((c,i)=>{
+    const b=c.userData&&c.userData.blend;if(!b)return;
+    const A=byName.get(b.a),B=byName.get(b.b);if(!A||!B)return;
+    if(b.mode==='mix'){
+      const id=sub('AnimationNodeBlendSpace1D',`blend_point_0/node = SubResource(${q(anim(A))})\nblend_point_0/pos = 0.0\nblend_point_1/node = SubResource(${q(anim(B))})\nblend_point_1/pos = 1.0\nmin_space = 0.0\nmax_space = 1.0\nsync = true\n`);
+      states.push({n:names[i],id});params.push(`parameters/${names[i]}/blend_position = ${b.w}`);
+    }else xf.push({a:A,b:B,fade:b.fade});
+  });
+  if(!states.length)throw new Error('No clips to put in the AnimationTree');
+  const tr=(from,to,body)=>{trans.push(q(from),q(to),`SubResource(${q(sub('AnimationNodeStateMachineTransition',body))})`)};
+  tr('Start',states[0].n,'advance_mode = 2\n');
+  const names2=new Set(states.map(x=>x.n));
+  if(states.length<=16)states.forEach(x=>states.forEach(y=>{if(x!==y&&!xf.some(f=>f.a===x.n&&f.b===y.n))tr(x.n,y.n,'xfade_time = 0.2\n')}));
+  xf.forEach(f=>{if(names2.has(f.a)&&names2.has(f.b))tr(f.a,f.b,`xfade_time = ${f.fade}\nswitch_mode = 2\nadvance_mode = 1\n`)});
+  const sm=sub('AnimationNodeStateMachine',states.map((x,k)=>`states/${x.n}/node = SubResource(${q(x.id)})\nstates/${x.n}/position = Vector2(${200+(k%4)*180}, ${100+Math.floor(k/4)*110})\n`).join('')+`transitions = [${trans.join(', ')}]\n`);
+  const root=glbName.replace(/\.glb$/,'').replace(/[^\w-]+/g,'_');
+  return `[gd_scene load_steps=${res.length+2} format=3]\n\n[ext_resource type="PackedScene" path=${q(glbName)} id="1_glb"]\n\n`+res.join('\n')+
+    `\n[node name=${q(root)} instance=ExtResource("1_glb")]\n\n[node name="AnimationTree" type="AnimationTree" parent="."]\ntree_root = SubResource(${q(sm)})\nanim_player = NodePath("../AnimationPlayer")\n`+
+    (params.length?params.join('\n')+'\n':'');
+}
+function godotSpec(){
+  if(!obj)return 'Load a model first';
+  const bl=obj.animations.filter(c=>c.userData&&c.userData.blend),plain=obj.animations.filter(c=>!(c.userData&&c.userData.blend)&&c.duration>0&&c.tracks.length).length,mix=bl.filter(c=>c.userData.blend.mode==='mix').length;
+  return `${plain} states · ${mix} BlendSpace1D · ${bl.length-mix} crossfade transitions · Godot 4.2+`;
+}
 document.querySelectorAll('#xp [data-k]').forEach(b=>b.onclick=()=>doExport(b.dataset.k));
 $('xb').onclick=()=>{
   const b=$('xp');b.classList.toggle('show');
-  $('fbxs').textContent=fbxSpec();
+  $('fbxs').textContent=fbxSpec();$('gds').textContent=godotSpec();
   ['gp','rp','ap','st'].forEach(i=>$(i).classList.remove('show'));
 };
-$('rn').onchange=e=>{
-  const i=+$('an').value,v=e.target.value.trim();
-  if(!obj||!v)return;
-  obj.animations[i].name=v;$('an').options[i].text=v;saveProj();renderAnimList();
-};
+function renameClip(i,v){
+  v=(v||'').trim();if(!obj||!v||!obj.animations[i])return false;
+  const was=obj.animations[i].name;
+  obj.animations.forEach(c=>{const b=c.userData&&c.userData.blend;if(b){if(b.a===was)b.a=v;if(b.b===was)b.b=v}});
+  obj.animations[i].name=v;$('an').options[i].text=v;if(+$('an').value===i)$('rn').value=v;
+  saveProj();syncBlendSel();return true;
+}
+$('rn').onchange=e=>{if(renameClip(+$('an').value,e.target.value))renderAnimList()};
 
 /* recent projects (IndexedDB, this browser only) */
 let dbp=null;
@@ -671,26 +758,104 @@ function readFiles(list){
 }
 
 /* animation list */
-function snap(){return{names:obj.animations.map(c=>c.name),extra:obj.animations.slice(baseCount).map(c=>({src:(c.userData&&c.userData.src)||'',json:THREE.AnimationClip.toJSON(c)}))}}
+function snap(){return{names:obj.animations.map(c=>c.name),extra:obj.animations.slice(baseCount).map(c=>({src:(c.userData&&c.userData.src)||'',blend:c.userData&&c.userData.blend,json:THREE.AnimationClip.toJSON(c)}))}}
 function syncSel(){const sel=$('an');sel.innerHTML='';obj.animations.forEach((c,i)=>sel.add(new Option(c.name||('Clip '+(i+1)),i)))}
 function renderAnimList(){
-  const box=$('al');box.textContent='';
+  const box=$('al');box.textContent='';syncBlendSel();
   if(!obj){box.textContent='Load a model first.';return}
   if(!obj.animations.length){box.textContent='No animations yet. Add an animation FBX above.';return}
   obj.animations.forEach((c,i)=>{
-    const row=document.createElement('div');row.className='row';
-    const o=document.createElement('button');o.className='b o'+(actions[i]&&actions[i]===cur?' on':'');
-    o.textContent=c.name;
-    const sm=document.createElement('small');
-    sm.textContent=c.duration.toFixed(2)+'s · '+(i<baseCount?'in model':((c.userData&&c.userData.src)||'added'));
-    o.appendChild(sm);o.onclick=()=>play(i);row.appendChild(o);
+    const row=document.createElement('div');row.className='clip'+(actions[i]&&actions[i]===cur?' on':'');
+    const pb=document.createElement('button');pb.className='b';pb.textContent=actions[i]===cur&&!paused?'❚❚':'▶';pb.title='Play';
+    pb.onclick=()=>{if(actions[i]===cur)togglePlay();else play(i);renderAnimList()};
+    const nm=document.createElement('input');nm.value=c.name;nm.title='Rename: type, then Enter';nm.spellcheck=false;
+    nm.onkeydown=e=>{if(e.key==='Enter')nm.blur();if(e.key==='Escape'){nm.value=c.name;nm.blur()}};
+    nm.onchange=()=>{if(!renameClip(i,nm.value))nm.value=c.name};
+    row.append(pb,nm);
     if(i>=baseCount){
-      const x=document.createElement('button');x.className='b';x.textContent='✕';x.title='Remove from list';
+      const x=document.createElement('button');x.className='b';x.textContent='✕';x.title='Remove clip';
       x.onclick=()=>removeClip(i);row.appendChild(x);
-    }
-    box.appendChild(row);
+    }else row.appendChild(document.createElement('span'));
+    const meta=document.createElement('div');meta.className='meta';
+    const src=i<baseCount?'in model':(c.userData&&c.userData.blend?'blend':'added');
+    const orig=c.userData&&c.userData.orig;
+    meta.innerHTML=`<span>${c.duration.toFixed(2)}s</span><span>${c.tracks.length} tracks</span><span class="tag${i<baseCount?'':' add'}"></span>`;
+    meta.lastChild.textContent=src;
+    if(orig!==undefined&&orig!==c.name){const o=document.createElement('span');o.textContent='was “'+orig+'”';meta.appendChild(o)}
+    else if(i>=baseCount&&c.userData&&c.userData.src){const o=document.createElement('span');o.textContent=c.userData.src;meta.appendChild(o)}
+    row.appendChild(meta);box.appendChild(row);
   });
 }
+/* blend: bake two clips into a new clip by sampling them through a temporary mixer */
+function syncBlendSel(){
+  ['ba','bb'].forEach((id,k)=>{
+    const sel=$(id),prev=sel.value;sel.innerHTML='';
+    if(obj)obj.animations.forEach((c,i)=>{if(c.duration>0)sel.add(new Option(c.name,i))});
+    if(prev!==''&&[...sel.options].some(o=>o.value===prev))sel.value=prev;
+    else if(sel.options.length>k)sel.selectedIndex=k;
+  });
+}
+function blendOpts(){
+  const a=+$('ba').value,b=+$('bb').value,mode=$('bm').value;
+  return{a,b,mode,w:+$('bw').value/100,fade:Math.max(.05,+$('bf').value||.4)};
+}
+function bakeBlend(o){
+  const A=obj.animations[o.a],B=obj.animations[o.b];
+  if(!A||!B||A===B)throw new Error('Pick two different clips');
+  const dA=A.duration,dB=B.duration,fade=Math.min(o.fade,dA,dB);
+  const D=o.mode==='mix'?dA*(1-o.w)+dB*o.w:dA+dB-fade;
+  const fps=30,n=Math.max(2,Math.round(D*fps)+1);
+  const keys=new Map();
+  [A,B].forEach(c=>c.tracks.forEach(t=>{const pt=THREE.PropertyBinding.parseTrackName(t.name);if(/^(position|quaternion|scale)$/.test(pt.propertyName))keys.set(t.name,pt)}));
+  const tgt=[];keys.forEach((pt,name)=>{const nd=THREE.PropertyBinding.findNode(obj,pt.nodeName);if(nd)tgt.push({name,nd,p:pt.propertyName,t:[],v:[]})});
+  // start every bone from rest so a track missing in one clip blends against the bind pose
+  obj.traverse(x=>{if(x.isSkinnedMesh)x.skeleton.pose()});
+  const bm=new THREE.AnimationMixer(obj),xa=bm.clipAction(A),xb=bm.clipAction(B),cl=(t,d)=>Math.min(Math.max(t,0),Math.max(d-1e-4,0));
+  xa.play();xb.play();
+  for(let k=0;k<n;k++){
+    const t=k/(n-1)*D;let wb;
+    if(o.mode==='mix'){const ph=D?t/D:0;xa.time=cl(ph*dA,dA);xb.time=cl(ph*dB,dB);wb=o.w}
+    else{const s0=dA-fade;xa.time=cl(t,dA);xb.time=cl(t-s0,dB);wb=Math.min(Math.max((t-s0)/fade,0),1)}
+    xa.setEffectiveWeight(1-wb);xb.setEffectiveWeight(wb);bm.update(0);
+    tgt.forEach(g=>{
+      const val=g.nd[g.p],v=g.v,L=v.length;
+      if(g.p==='quaternion'){
+        let q=[val.x,val.y,val.z,val.w];
+        if(L&&q[0]*v[L-4]+q[1]*v[L-3]+q[2]*v[L-2]+q[3]*v[L-1]<0)q=q.map(x=>-x);
+        v.push(...q);
+      }else v.push(val.x,val.y,val.z);
+      g.t.push(t);
+    });
+  }
+  bm.stopAllAction();bm.uncacheRoot(obj);
+  const tracks=tgt.map(g=>new(g.p==='quaternion'?THREE.QuaternionKeyframeTrack:THREE.VectorKeyframeTrack)(g.name,g.t,g.v));
+  const name=o.mode==='mix'?`${A.name} + ${B.name} ${Math.round(o.w*100)}%`:`${A.name} → ${B.name}`;
+  const clip=new THREE.AnimationClip(name,D,tracks);
+  clip.userData={src:'blend',blend:{a:A.name,b:B.name,mode:o.mode,w:o.w,fade}};
+  return clip;
+}
+let previewClip=null;
+function stopPreview(){if(previewClip&&mixer){const a=mixer.existingAction(previewClip);if(a){a.stop();if(cur===a)cur=null}mixer.uncacheClip(previewClip)}previewClip=null}
+$('bm').onchange=()=>{const x=$('bm').value==='xf';$('bwl').style.display=x?'none':'';$('bfl').style.display=x?'':'none'};
+$('bw').oninput=()=>$('bwv').textContent=$('bw').value+'%';
+$('bpv').onclick=()=>{
+  if(!obj||!mixer){info.textContent='Load a model with animations first';return}
+  try{
+    stopPreview();if(cur)cur.stop();
+    previewClip=bakeBlend(blendOpts());
+    cur=mixer.clipAction(previewClip);cur.setLoop(loopOn?THREE.LoopRepeat:THREE.LoopOnce,Infinity);cur.clampWhenFinished=true;cur.reset().play();paused=false;
+    info.textContent='Preview: '+previewClip.name+' · '+previewClip.duration.toFixed(2)+'s (not saved yet)';renderAnimList();
+  }catch(e){info.textContent='Blend failed: '+e.message}
+};
+$('bk').onclick=()=>{
+  if(!obj||!mixer){info.textContent='Load a model with animations first';return}
+  try{
+    stopPreview();
+    const clip=bakeBlend(blendOpts());
+    let u=clip.name,q=2;while(obj.animations.some(a=>a.name===u))u=clip.name+' ('+(q++)+')';
+    clip.name=u;obj.animations.push(clip);afterAdd(1,[]);info.textContent='Baked '+u+' · '+clip.duration.toFixed(2)+'s';
+  }catch(e){info.textContent='Blend failed: '+e.message}
+};
 function removeClip(i){
   if(i<baseCount||!obj.animations[i])return;
   const clip=obj.animations[i],act=actions[i];
@@ -861,7 +1026,7 @@ $('gl').onclick=()=>{const b=$('gp');b.classList.toggle('show');$('rp').classLis
   pt.onclick=()=>setDock(app.classList.contains('nodock'));
   addEventListener('keydown',e=>{if(e.key==='Escape'&&!app.classList.contains('nodock'))setDock(false)});
 })();
-if(STANDALONE){const h=document.querySelector('#xp .hint');if(h)h.textContent='Files download directly as .fbx / .glb / .gltf / .obj / .stl / .ply. Hidden meshes (Mesh off) are left out of OBJ, STL and PLY.'}
+if(STANDALONE){const h=document.querySelector('#xp .hint');if(h)h.textContent='Files download directly as .fbx / .glb / .gltf / .obj / .stl / .ply (Godot export is a .zip). Hidden meshes (Mesh off) are left out of OBJ, STL and PLY.'}
 (function loop(){
   requestAnimationFrame(loop);
   if(mixer)mixer.update(clock.getDelta());else clock.getDelta();
