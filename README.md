@@ -11,7 +11,7 @@ Free, browser-based FBX viewer and animation tool. Everything runs locally in yo
 - Outliner: node hierarchy with click-to-highlight, texture list with thumbnails
 - Animation panel: play, pause, scrub, loop, speed; rename clips
 - Merge animations: add animation-only FBX files (e.g. Mixamo "Without Skin") to a model and play them
-- Export: GLB, GLB (animation only), GLTF, OBJ, STL, PLY
+- Export: FBX (original file + renamed and added clips), GLB, GLB (animation only), GLTF, OBJ, STL, PLY
 - Recent projects (stored in your browser's IndexedDB), including renamed and added clips
 
 ## Usage tips
@@ -19,7 +19,7 @@ Free, browser-based FBX viewer and animation tool. Everything runs locally in yo
 - External textures: drop the image files (png / jpg / webp) together with the FBX.
 - Added animations must use the same rig (bone names) as the model. Mixamo to Mixamo works.
 - OBJ / STL / PLY export the mesh at the current animation pose.
-- FBX export is not possible in the browser. Use GLB for Godot, Blender, Unity (glTFast).
+- FBX export rewrites the original binary FBX: mesh, skin and materials stay untouched, clips are renamed and added clips are appended as new animation stacks. ASCII FBX cannot be saved.
 
 ## Run locally
 

@@ -60,6 +60,7 @@ select.b{max-width:200px}
 #xp.show{display:block}
 #xp button{display:block;width:100%;text-align:left;margin-bottom:6px}
 #xp small{display:block;opacity:.7;font-size:11px;margin-top:2px}
+#xp small.spec{opacity:.9;color:var(--acc);font-size:11px}
 #xp .hint{font-size:11px;opacity:.6;margin:4px 2px 0}
 #over{position:absolute;inset:0;border:3px dashed var(--acc);display:none;pointer-events:none}
 
@@ -149,6 +150,7 @@ select.b{max-width:200px}
       <div id="gp" class="pn"><div id="gg"></div><div id="gn">Sample files are loaded on demand from the three.js examples repo (MIT). Mixamo models belong to Mixamo/Adobe, use them for testing only. Stanford Bunny: Stanford Computer Graphics Lab.</div></div>
       <div id="rp" class="pn"></div>
       <div id="xp" class="pn">
+  <button class="b" data-k="fbx">FBX<small>Original file + renamed clips + added animations</small><small id="fbxs" class="spec"></small></button>
   <button class="b" data-k="glb">GLB<small>Mesh + skeleton + all animations (Godot, Blender, Unity with glTFast)</small></button>
   <button class="b" data-k="glb-anim">GLB, animation only<small>Skeleton + animations, no mesh</small></button>
   <button class="b" data-k="gltf">GLTF<small>Same as GLB as JSON with embedded data</small></button>
@@ -236,6 +238,7 @@ function load(buf,name,saved,extra){
   if(obj.animations&&obj.animations.length){
     mixer=new THREE.AnimationMixer(obj);mixer.timeScale=+$('sp').value;
     obj.animations.forEach((c,i)=>{
+      if(i<baseCount)c.userData={orig:c.name};
       if(saved&&saved[i])c.name=saved[i];
       actions.push(mixer.clipAction(c));
       sel.add(new Option(c.name||('Clip '+(i+1)),i));
@@ -308,6 +311,14 @@ async function doExport(kind){
       info.textContent='Saved '+fn;$('xp').classList.remove('show');
     }catch(e){info.textContent='Save cancelled/failed: '+(e.code||e.message)}
   };
+  if(kind==='fbx'){
+    try{
+      const r=fbxSave(curBuf);
+      await finish(r.bytes,'.fbx','_edited');
+      info.textContent+=` · FBX ${(r.ver/1000).toFixed(1)} · ${obj.animations.length} clips · ${(r.bytes.length/1048576).toFixed(1)} MB`+(r.skipped?` · ${r.skipped} tracks skipped`:'');
+    }catch(e){info.textContent='FBX save failed: '+e.message}
+    return;
+  }
   if(kind==='glb'||kind==='gltf'||kind==='glb-anim'){
     const strip=kind==='glb-anim';
     if(strip&&!obj.animations.length){info.textContent='No animations to export';return}
@@ -333,9 +344,166 @@ async function doExport(kind){
   }catch(e){info.textContent='Export failed: '+e.message}
   finally{g.children.forEach(m=>m.geometry.dispose())}
 }
+/* FBX save: rewrite the original binary FBX, rename its clips and append added clips as new AnimationStacks */
+const FBX_SEC=46186158000n,dec=b=>new TextDecoder().decode(b);
+function fbxRead(buf){
+  const u8=new Uint8Array(buf),dv=new DataView(buf);
+  if(dec(u8.subarray(0,18))!=='Kaydara FBX Binary')throw new Error('ASCII FBX cannot be saved, only binary FBX');
+  const ver=dv.getUint32(23,true),big=ver>=7500;let p=27;
+  const off=()=>{const v=big?Number(dv.getBigUint64(p,true)):dv.getUint32(p,true);p+=big?8:4;return v};
+  const SZ={Y:2,C:1,I:4,F:4,D:8,L:8};
+  function node(){
+    const end=off(),np=off();off();const nl=u8[p++];
+    if(!end)return null;
+    const n={name:dec(u8.subarray(p,p+nl)),props:[],kids:[],sentinel:false};p+=nl;
+    for(let i=0;i<np;i++){
+      const s=p,t=String.fromCharCode(u8[p++]),pr={t};
+      if(SZ[t]){
+        if(t==='L')pr.v=dv.getBigInt64(p,true);else if(t==='I')pr.v=dv.getInt32(p,true);else if(t==='D')pr.v=dv.getFloat64(p,true);
+        p+=SZ[t];
+      }else if(t==='S'||t==='R'){const l=dv.getUint32(p,true);p+=4;if(t==='S')pr.v=dec(u8.subarray(p,p+l));p+=l}
+      else{p+=8;p+=4+dv.getUint32(p,true)}
+      pr.raw=u8.subarray(s,p);n.props.push(pr);
+    }
+    while(p<end){const k=node();if(!k){n.sentinel=true;break}n.kids.push(k)}
+    p=end;return n;
+  }
+  const root=[];for(;;){const k=node();if(!k)break;root.push(k)}
+  return{ver,big,head:u8.subarray(0,27),foot:u8.subarray(p),root};
+}
+function fbxWrite(f){
+  const out=[],big=f.big,hs=big?25:13,enc=new TextEncoder();let len=0;
+  const push=b=>{out.push(b);len+=b.length};
+  const prop=pr=>{
+    if(pr.raw)return pr.raw;
+    const t=pr.t;let b;
+    if(t==='S'){const s=enc.encode(pr.v);b=new Uint8Array(5+s.length);new DataView(b.buffer).setUint32(1,s.length,true);b.set(s,5)}
+    else if(t==='L'){b=new Uint8Array(9);new DataView(b.buffer).setBigInt64(1,pr.v,true)}
+    else if(t==='I'){b=new Uint8Array(5);new DataView(b.buffer).setInt32(1,pr.v,true)}
+    else if(t==='D'){b=new Uint8Array(9);new DataView(b.buffer).setFloat64(1,pr.v,true)}
+    else{
+      let d=new Uint8Array(pr.v.buffer,pr.v.byteOffset,pr.v.byteLength),e=0;
+      if(d.length>128){d=fflate.zlibSync(d);e=1}
+      b=new Uint8Array(13+d.length);const v=new DataView(b.buffer);
+      v.setUint32(1,pr.v.length,true);v.setUint32(5,e,true);v.setUint32(9,d.length,true);b.set(d,13);
+    }
+    b[0]=t.charCodeAt(0);return b;
+  };
+  const node=n=>{
+    const nm=enc.encode(n.name),h=new Uint8Array(hs+nm.length),v=new DataView(h.buffer);
+    push(h);const ps=n.props.map(prop),pl=ps.reduce((a,b)=>a+b.length,0);
+    ps.forEach(push);n.kids.forEach(node);
+    if(n.kids.length||n.sentinel||!n.props.length)push(new Uint8Array(hs));
+    const set=(o,x)=>big?v.setBigUint64(o,BigInt(x),true):v.setUint32(o,x,true),w=big?8:4;
+    set(0,len);set(w,ps.length);set(2*w,pl);h[3*w]=nm.length;h.set(nm,hs);
+  };
+  push(f.head);f.root.forEach(node);push(new Uint8Array(hs));
+  // footer: id, pad to 16, 4 zero bytes, then version / zeros / magic copied from the original
+  const ft=f.foot,tail=ft.subarray(ft.length-140);
+  push(ft.subarray(0,16));let pad=((len+15)&~15)-len;if(!pad)pad=16;push(new Uint8Array(pad+4));push(tail);
+  const r=new Uint8Array(len);let o=0;out.forEach(b=>{r.set(b,o);o+=b.length});return r;
+}
+const fN=(name,props,kids)=>({name,props,kids:kids||[],sentinel:false});
+const S=v=>({t:'S',v}),L=v=>({t:'L',v:BigInt(v)}),I=v=>({t:'I',v}),D=v=>({t:'D',v});
+const P=(n,a,b,c,...vals)=>fN('P',[S(n),S(a),S(b),S(c),...vals]);
+const kid=(n,name)=>n&&n.kids.find(k=>k.name===name);
+const nmOf=n=>n.props[1].v.split('\0\x01')[0];
+const p70=n=>{const o={},q=kid(n,'Properties70');if(q)q.kids.forEach(k=>o[k.props[0].v]=k.props.slice(4).map(x=>Number(x.v)));return o};
+function eulerKeys(tr,model){
+  const pp=p70(model),order=['ZYX','YZX','XZY','ZXY','YXZ','XYZ'][(pp.RotationOrder||[0])[0]]||'ZYX';
+  const qOf=a=>a?new THREE.Quaternion().setFromEuler(new THREE.Euler(...a.map(THREE.MathUtils.degToRad),order)):null;
+  const preI=qOf(pp.PreRotation),post=qOf(pp.PostRotation);if(preI)preI.invert();
+  const q=new THREE.Quaternion(),e=new THREE.Euler(),n=tr.times.length,out=[[],[],[]],ax={X:'x',Y:'y',Z:'z'};
+  const wrap=(v,r)=>v+2*Math.PI*Math.round((r-v)/(2*Math.PI));
+  let prev=null;
+  for(let i=0;i<n;i++){
+    q.fromArray(tr.values,i*4);if(preI)q.premultiply(preI);if(post)q.multiply(post);
+    e.setFromQuaternion(q,order);
+    const a={x:e.x,y:e.y,z:e.z},b={...a};
+    b[ax[order[0]]]+=Math.PI;b[ax[order[1]]]=Math.PI-b[ax[order[1]]];b[ax[order[2]]]+=Math.PI;
+    let best=a;
+    if(prev){
+      const fit=c=>{const r={};let d=0;for(const k of 'xyz'){r[k]=wrap(c[k],prev[k]);d+=Math.abs(r[k]-prev[k])}r.d=d;return r};
+      const fa=fit(a),fb=fit(b);best=fa.d<=fb.d?fa:fb;
+    }
+    prev=best;out[0].push(best.x*180/Math.PI);out[1].push(best.y*180/Math.PI);out[2].push(best.z*180/Math.PI);
+  }
+  return out;
+}
+function fbxSave(buf){
+  const f=fbxRead(buf),top=n=>f.root.find(k=>k.name===n);
+  const objs=top('Objects'),conns=top('Connections');
+  if(!objs||!conns)throw new Error('FBX has no Objects/Connections');
+  let id=0n;objs.kids.forEach(k=>{if(k.props[0]&&k.props[0].t==='L'&&k.props[0].v>id)id=k.props[0].v});
+  const nid=()=>(id+=1n);
+  // original clips follow three.js order: for..in over stack ids (as FBXLoader does)
+  const stacks={};objs.kids.filter(k=>k.name==='AnimationStack').forEach(k=>stacks[Number(k.props[0].v)]=k);
+  const order=[];for(const k in stacks)order.push(stacks[k]);
+  let takes=top('Takes');
+  const takeOf=nm=>takes&&takes.kids.find(k=>k.name==='Take'&&k.props[0].v===nm);
+  if(obj.animations.length&&!takes){takes=fN('Takes',[],[fN('Current',[S('')])]);f.root.push(takes)}
+  for(let i=0;i<baseCount&&i<order.length;i++){
+    const st=order[i],old=nmOf(st),nm=obj.animations[i].name;
+    if(old===nm)continue;
+    st.props[1]=S(nm+'\0\x01AnimStack');
+    const t=takeOf(old);if(t){t.props[0]=S(nm);const fn=kid(t,'FileName');if(fn)fn.props[0]=S(nm.replace(/\W+/g,'_')+'.tak')}
+  }
+  const models={};objs.kids.filter(k=>k.name==='Model').forEach(k=>models[THREE.PropertyBinding.sanitizeNodeName(nmOf(k))]=k);
+  const cnt={},C=(...a)=>conns.kids.push(fN('C',a));let skipped=0;
+  const add=(n)=>{objs.kids.push(n);cnt[n.name]=(cnt[n.name]||0)+1;return n.props[0].v};
+  for(let i=baseCount;i<obj.animations.length;i++){
+    const clip=obj.animations[i],dur=BigInt(Math.round(clip.duration*Number(FBX_SEC)));
+    const sid=add(fN('AnimationStack',[L(nid()),S(clip.name+'\0\x01AnimStack'),S('')],[fN('Properties70',[],[
+      P('LocalStop','KTime','Time','',L(dur)),P('ReferenceStop','KTime','Time','',L(dur))])]));
+    const lid=add(fN('AnimationLayer',[L(nid()),S('BaseLayer\0\x01AnimLayer'),S('')]));
+    C(S('OO'),L(lid),L(sid));
+    clip.tracks.forEach(tr=>{
+      const pt=THREE.PropertyBinding.parseTrackName(tr.name),m=models[pt.nodeName];
+      const kind={position:['T','Lcl Translation'],quaternion:['R','Lcl Rotation'],scale:['S','Lcl Scaling']}[pt.propertyName];
+      if(!m||!kind||!tr.times.length){skipped++;return}
+      const ch=kind[0]==='R'?eulerKeys(tr,m):[0,1,2].map(c=>Array.from(tr.times,(_,j)=>tr.values[j*3+c]));
+      const kt=BigInt64Array.from(tr.times,t=>BigInt(Math.round(t*Number(FBX_SEC)))),n=kt.length;
+      const cn=add(fN('AnimationCurveNode',[L(nid()),S(kind[0]+'\0\x01AnimCurveNode'),S('')],[fN('Properties70',[],
+        ['X','Y','Z'].map((a,c)=>P('d|'+a,'Number','','A',D(ch[c][0]))))]));
+      C(S('OO'),L(cn),L(lid));C(S('OP'),L(cn),L(m.props[0].v),S(kind[1]));
+      ['X','Y','Z'].forEach((a,c)=>{
+        const cv=add(fN('AnimationCurve',[L(nid()),S('\0\x01AnimCurve'),S('')],[
+          fN('Default',[D(ch[c][0])]),fN('KeyVer',[I(4009)]),
+          fN('KeyTime',[{t:'l',v:kt}]),fN('KeyValueFloat',[{t:'f',v:Float32Array.from(ch[c])}]),
+          fN('KeyAttrFlags',[{t:'i',v:Int32Array.of(24836)}]),
+          fN('KeyAttrDataFloat',[{t:'f',v:new Float32Array(Int32Array.of(0,0,218434821,0).buffer)}]),
+          fN('KeyAttrRefCount',[{t:'i',v:Int32Array.of(n)}])]));
+        C(S('OP'),L(cv),L(cn),S('d|'+a));
+      });
+    });
+    takes.kids.push(fN('Take',[S(clip.name)],[fN('FileName',[S(clip.name.replace(/\W+/g,'_')+'.tak')]),
+      fN('LocalTime',[L(0),L(dur)]),fN('ReferenceTime',[L(0),L(dur)])]));
+  }
+  const defs=top('Definitions');
+  if(defs){
+    let total=0;
+    for(const [t,c] of Object.entries(cnt)){
+      let ot=defs.kids.find(k=>k.name==='ObjectType'&&k.props[0].v===t);
+      if(!ot){ot=fN('ObjectType',[S(t)],[fN('Count',[I(0)])]);defs.kids.push(ot)}
+      const ck=kid(ot,'Count');ck.props[0]=I(ck.props[0].v+c);total+=c;
+    }
+    const dc=kid(defs,'Count');if(dc)dc.props[0]=I(dc.props[0].v+total);
+  }
+  return{bytes:fbxWrite(f),ver:f.ver,skipped};
+}
+function fbxSpec(){
+  if(!obj||!curBuf)return 'Load a model first';
+  const u8=new Uint8Array(curBuf,0,27);
+  if(dec(u8.subarray(0,18))!=='Kaydara FBX Binary')return 'ASCII FBX: not supported, only binary';
+  const v=new DataView(curBuf).getUint32(23,true),add=obj.animations.length-baseCount;
+  const ren=obj.animations.slice(0,baseCount).filter(c=>c.userData&&c.userData.orig!==undefined&&c.userData.orig!==c.name).length;
+  return `FBX ${(v/1000).toFixed(1)} binary · original mesh, skin, materials kept · ${obj.animations.length} clip${obj.animations.length===1?'':'s'} (${baseCount} in model${ren?', '+ren+' renamed':''}, ${add} added)`+
+    (obj.animations.length?' · '+obj.animations.map(c=>c.name+' '+c.duration.toFixed(1)+'s').join(', '):'');
+}
 document.querySelectorAll('#xp [data-k]').forEach(b=>b.onclick=()=>doExport(b.dataset.k));
 $('xb').onclick=()=>{
   const b=$('xp');b.classList.toggle('show');
+  $('fbxs').textContent=fbxSpec();
   ['gp','rp','ap','st'].forEach(i=>$(i).classList.remove('show'));
 };
 $('rn').onchange=e=>{
@@ -693,7 +861,7 @@ $('gl').onclick=()=>{const b=$('gp');b.classList.toggle('show');$('rp').classLis
   pt.onclick=()=>setDock(app.classList.contains('nodock'));
   addEventListener('keydown',e=>{if(e.key==='Escape'&&!app.classList.contains('nodock'))setDock(false)});
 })();
-if(STANDALONE){const h=document.querySelector('#xp .hint');if(h)h.textContent='Files download directly as .glb / .gltf / .obj / .stl / .ply. Hidden meshes (Mesh off) are left out of OBJ, STL and PLY.'}
+if(STANDALONE){const h=document.querySelector('#xp .hint');if(h)h.textContent='Files download directly as .fbx / .glb / .gltf / .obj / .stl / .ply. Hidden meshes (Mesh off) are left out of OBJ, STL and PLY.'}
 (function loop(){
   requestAnimationFrame(loop);
   if(mixer)mixer.update(clock.getDelta());else clock.getDelta();
